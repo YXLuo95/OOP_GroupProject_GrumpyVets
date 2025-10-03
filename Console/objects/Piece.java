@@ -1,3 +1,4 @@
+package objects;
 public class Piece{
     
     private PieceType type;

@@ -1,3 +1,7 @@
+package logic;
+import objects.Piece;
+import objects.PieceColor;
+import objects.PieceType;
 
 public class Board {
     
@@ -49,20 +53,6 @@ public class Board {
         return squares[row][col];
     }
 
-    // method to move a piece from one position to another  
-    // move is a Move object that contains start and end positions
-    public void movePiece(Move move) {
-        int startRow = move.getStartRow();
-        int startCol = move.getStartCol();
-        int endRow = move.getEndRow();
-        int endCol = move.getEndCol();
-
-        Piece pieceToMove = squares[startRow][startCol];
-        squares[endRow][endCol] = pieceToMove;
-        squares[startRow][startCol] = null; // Empty the starting square
-    }
-    
-
     // method to print the board to the console
     // using exsiting PieceType and PieceColor enums
     public void printBoard() {
@@ -105,4 +95,33 @@ public class Board {
             System.out.println();
         }
     }
+
+    // method to move a piece from source to destination
+    // call validation methods from Move class
+    // replace source with null and destination with piece
+    // replace piece at destination with piece at source
+    public boolean movePiece(int srcRow, int srcCol, int destRow, int destCol, PieceColor currentTurn) {
+        if (!Move.isValidSource(srcRow, srcCol, this, currentTurn)) {
+            System.out.println("Invalid source position.");
+            return false;
+        }
+        if (!Move.isValidDestination(destRow, destCol)) {
+            System.out.println("Invalid destination position.");
+            return false;
+        }
+        if (Move.isDestinationOccupiedBySameColor(destRow, destCol, this, currentTurn)) {
+            System.out.println("Destination occupied by same color piece.");
+            return false;
+        }
+        if (!Move.isValidPieceMovement(srcRow, srcCol, destRow, destCol, this)) {
+            System.out.println("Invalid piece movement.");
+            return false;
+        }
+
+        // Move is valid; perform the move
+        squares[destRow][destCol] = squares[srcRow][srcCol];
+        squares[srcRow][srcCol] = null;
+        return true;
+    }
+
 }
