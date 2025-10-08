@@ -1,127 +1,90 @@
 package logic;
+
 import objects.Piece;
 import objects.PieceColor;
 import objects.PieceType;
 
 public class Board {
-    
-    // define an 8x8 array to represent the chess board
-    // using 2D array of Piece objects
-    private Piece[][] squares = new Piece[8][8];    
+    private Piece[][] squares = new Piece[8][8];
 
-
-    // constructor to initialize the board with pieces in starting positions
-    // given pieces on the board a unique ID
+    // Initialize the board with standard chess setup
     public Board() {
-        // Initialize white pieces
-        squares[0][0] = new Piece(PieceType.ROOK, PieceColor.WHITE, 1);
-        squares[0][1] = new Piece(PieceType.KNIGHT, PieceColor.WHITE, 2);
-        squares[0][2] = new Piece(PieceType.BISHOP, PieceColor.WHITE, 3);
-        squares[0][3] = new Piece(PieceType.QUEEN, PieceColor.WHITE, 4);
-        squares[0][4] = new Piece(PieceType.KING, PieceColor.WHITE, 5);
-        squares[0][5] = new Piece(PieceType.BISHOP, PieceColor.WHITE, 6);
-        squares[0][6] = new Piece(PieceType.KNIGHT, PieceColor.WHITE, 7);
-        squares[0][7] = new Piece(PieceType.ROOK, PieceColor.WHITE, 8);
-        for (int i = 0; i < 8; i++) {
-            squares[1][i] = new Piece(PieceType.PAWN, PieceColor.WHITE, 9 + i);
-        }
-
-        // Initialize black pieces
-        squares[7][0] = new Piece(PieceType.ROOK, PieceColor.BLACK, 17);
-        squares[7][1] = new Piece(PieceType.KNIGHT, PieceColor.BLACK, 18);
-        squares[7][2] = new Piece(PieceType.BISHOP, PieceColor.BLACK, 19);
-        squares[7][3] = new Piece(PieceType.QUEEN, PieceColor.BLACK, 20);
-        squares[7][4] = new Piece(PieceType.KING, PieceColor.BLACK, 21);
-        squares[7][5] = new Piece(PieceType.BISHOP, PieceColor.BLACK, 22);
-        squares[7][6] = new Piece(PieceType.KNIGHT, PieceColor.BLACK, 23);
-        squares[7][7] = new Piece(PieceType.ROOK, PieceColor.BLACK, 24);
-        for (int i = 0; i < 8; i++) {
-            squares[6][i] = new Piece(PieceType.PAWN, PieceColor.BLACK, 25 + i);
-        }
-
-        // Initialize empty squares
-        for (int row = 2; row <= 5;
-                row++) {
-                for (int col = 0; col < 8; col++) {
-                    squares[row][col] = null; // Empty square
-                }
+        // Clear board
+        for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+                squares[r][c] = null;
             }
+        }
+
+        // ---- WHITE (top, rows 0–1) ----
+        // Major pieces
+        squares[0][0] = new Piece(PieceType.ROOK,   PieceColor.WHITE);
+        squares[0][1] = new Piece(PieceType.KNIGHT, PieceColor.WHITE);
+        squares[0][2] = new Piece(PieceType.BISHOP, PieceColor.WHITE);
+        squares[0][3] = new Piece(PieceType.QUEEN,  PieceColor.WHITE);
+        squares[0][4] = new Piece(PieceType.KING,   PieceColor.WHITE);
+        squares[0][5] = new Piece(PieceType.BISHOP, PieceColor.WHITE);
+        squares[0][6] = new Piece(PieceType.KNIGHT, PieceColor.WHITE);
+        squares[0][7] = new Piece(PieceType.ROOK,   PieceColor.WHITE);
+
+        // Pawns
+        for (int c = 0; c < 8; c++) {
+            squares[1][c] = new Piece(PieceType.PAWN, PieceColor.WHITE);
+        }
+
+        // ---- BLACK (bottom, rows 6–7) ----
+        // Pawns
+        for (int c = 0; c < 8; c++) {
+            squares[6][c] = new Piece(PieceType.PAWN, PieceColor.BLACK);
+        }
+
+        // Major pieces
+        squares[7][0] = new Piece(PieceType.ROOK,   PieceColor.BLACK);
+        squares[7][1] = new Piece(PieceType.KNIGHT, PieceColor.BLACK);
+        squares[7][2] = new Piece(PieceType.BISHOP, PieceColor.BLACK);
+        squares[7][3] = new Piece(PieceType.QUEEN,  PieceColor.BLACK);
+        squares[7][4] = new Piece(PieceType.KING,   PieceColor.BLACK);
+        squares[7][5] = new Piece(PieceType.BISHOP, PieceColor.BLACK);
+        squares[7][6] = new Piece(PieceType.KNIGHT, PieceColor.BLACK);
+        squares[7][7] = new Piece(PieceType.ROOK,   PieceColor.BLACK);
     }
 
-    // method to get the piece at a specific position
+    // --- Utility methods ---
+
+    private boolean inBounds(int r, int c) {
+        return 0 <= r && r < 8 && 0 <= c && c < 8;
+    }
+
     public Piece getPieceAt(int row, int col) {
+        if (!inBounds(row, col)) return null;
         return squares[row][col];
     }
 
-    // method to print the board to the console
-    // using exsiting PieceType and PieceColor enums
+    public void setPieceAt(int row, int col, Piece piece) {
+        if (inBounds(row, col)) {
+            squares[row][col] = piece;
+        }
+    }
+
     public void printBoard() {
-        for (int row = 0; row < 8; row++) {
-            for (int col = 0; col < 8; col++) {
-                Piece piece = squares[row][col];
-                if (piece == null) {
+        System.out.println("   a b c d e f g h");
+        for (int r = 0; r < 8; r++) {
+            System.out.print((r + 1) + "  ");
+            for (int c = 0; c < 8; c++) {
+                Piece p = squares[r][c];
+                if (p == null) {
                     System.out.print(". ");
                 } else {
-                    char pieceChar;
-                    switch (piece.getType()) {
-                        case KING:
-                            pieceChar = 'K';
-                            break;
-                        case QUEEN:
-                            pieceChar = 'Q';
-                            break;
-                        case ROOK:
-                            pieceChar = 'R';
-                            break;
-                        case BISHOP:
-                            pieceChar = 'B';
-                            break;
-                        case KNIGHT:
-                            pieceChar = 'N';
-                            break;
-                        case PAWN:
-                            pieceChar = 'P';
-                            break;
-                        default:
-                            pieceChar = '?';
-                    }
-                    if (piece.getColor() == PieceColor.WHITE) {
-                        System.out.print(Character.toUpperCase(pieceChar) + " ");
+                    char symbol = p.getType().toString().charAt(0);
+                    if (p.getColor() == PieceColor.WHITE) {
+                        System.out.print(Character.toUpperCase(symbol) + " ");
                     } else {
-                        System.out.print(Character.toLowerCase(pieceChar) + " ");
+                        System.out.print(Character.toLowerCase(symbol) + " ");
                     }
                 }
             }
-            System.out.println();
+            System.out.println(" " + (r + 1));
         }
+        System.out.println("   a b c d e f g h");
     }
-
-    // method to move a piece from source to destination
-    // call validation methods from Move class
-    // replace source with null and destination with piece
-    // replace piece at destination with piece at source
-    public boolean movePiece(int srcRow, int srcCol, int destRow, int destCol, PieceColor currentTurn) {
-        if (!Move.isValidSource(srcRow, srcCol, this, currentTurn)) {
-            System.out.println("Invalid source position.");
-            return false;
-        }
-        if (!Move.isValidDestination(destRow, destCol)) {
-            System.out.println("Invalid destination position.");
-            return false;
-        }
-        if (Move.isDestinationOccupiedBySameColor(destRow, destCol, this, currentTurn)) {
-            System.out.println("Destination occupied by same color piece.");
-            return false;
-        }
-        if (!Move.isValidPieceMovement(srcRow, srcCol, destRow, destCol, this)) {
-            System.out.println("Invalid piece movement.");
-            return false;
-        }
-
-        // Move is valid; perform the move
-        squares[destRow][destCol] = squares[srcRow][srcCol];
-        squares[srcRow][srcCol] = null;
-        return true;
-    }
-
 }

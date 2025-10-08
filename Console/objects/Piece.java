@@ -4,13 +4,10 @@ public class Piece{
     private PieceType type;
     private PieceColor color;
 
-    private int id; // Unique identifier for each piece
-    
 
-    public Piece(PieceType type, PieceColor color, int id) {
+    public Piece(PieceType type, PieceColor color) {
         this.type = type;
         this.color = color;
-        this.id = id;
     }
 
     public PieceType getType() {
@@ -18,8 +15,5 @@ public class Piece{
     }
     public PieceColor getColor() {
         return color;
-    }
-    public int getId() {
-        return id;
     }
 }
