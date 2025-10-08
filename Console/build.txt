@@ -1,0 +1,5 @@
+To complie this version 
+
+
+javac console/*.java logic/*.java objects/*.java
+java console.Main
