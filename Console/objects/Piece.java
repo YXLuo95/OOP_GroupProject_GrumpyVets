@@ -1,19 +1,37 @@
 package objects;
-public class Piece{
-    
-    private PieceType type;
-    private PieceColor color;
 
+import logic.Board;
 
-    public Piece(PieceType type, PieceColor color) {
-        this.type = type;
+public abstract class Piece implements Moveable {
+    protected PieceColor color;
+    protected PieceType type;
+    protected int x;  
+    protected int y;  
+
+    public Piece(PieceColor color, PieceType type, int x, int y) {
         this.color = color;
+        this.type = type;
+        this.x = x;
+        this.y = y;
     }
 
-    public PieceType getType() {
-        return type;
+    public PieceColor getColor() { return color; }
+    public PieceType getType() { return type; }
+    public int getX() { return x; }
+    public int getY() { return y; }
+
+   
+    public void setPosition(int x, int y) {
+        this.x = x;
+        this.y = y;
     }
-    public PieceColor getColor() {
-        return color;
+
+    
+    public abstract boolean canMove(Board board, int startRow, int startCol, int endRow, int endCol);
+
+   @Override
+    public String toString() {
+        String s = type.symbol();
+        return (color == PieceColor.WHITE) ? s : s.toLowerCase();
     }
 }
