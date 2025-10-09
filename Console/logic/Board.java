@@ -3,31 +3,33 @@ package logic;
 import objects.*;
 
 /**
- * 棋盘类：负责保存所有棋子、执行移动、打印棋盘。
- * 不直接判断走法合法性（那由各个棋子类的 canMove() 决定）。
+ * Board class representing an 8x8 chess board with pieces.
+ * Provides methods to reset, move pieces, and print the board.
+ * Includes deep copy functionality for undo/redo features. 
+ * Supports standard chess starting position.
  */
 public class Board {
 
-    // 8x8 棋盘数组，squares[row][col]
+    // create an 8x8 array to hold the pieces
     private final Piece[][] squares = new Piece[8][8];
 
-    /** 构造函数：创建标准开局 */
+    /** Constructor: Create the standard starting position */
     public Board() {
         resetToStandard();
     }
 
     /**
-     * 重置棋盘为标准开局（黑方在上，白方在下）
+     * Reset the board to the standard starting position (Black on top, White on bottom)
      */
     public final void resetToStandard() {
-        // 清空所有格子
+        // Clear all squares
         for (int r = 0; r < 8; r++) {
             for (int c = 0; c < 8; c++) {
                 squares[r][c] = null;
             }
         }
 
-        // ===== 黑方（顶部）=====
+        // Place pieces for Black (top)
         squares[0][0] = new Rook  (PieceColor.BLACK, 0, 0);
         squares[0][1] = new Knight(PieceColor.BLACK, 0, 1);
         squares[0][2] = new Bishop(PieceColor.BLACK, 0, 2);
@@ -41,7 +43,7 @@ public class Board {
             squares[1][c] = new Pawn(PieceColor.BLACK, 1, c);
         }
 
-        // ===== 白方（底部）=====
+        // Place pieces for White (bottom)
         for (int c = 0; c < 8; c++) {
             squares[6][c] = new Pawn(PieceColor.WHITE, 6, c);
         }
@@ -56,33 +58,33 @@ public class Board {
         squares[7][7] = new Rook  (PieceColor.WHITE, 7, 7);
     }
 
-    /* ---------- 工具方法 ---------- */
+    /* ---------- Auxiliary Methods ---------- */
 
-    /** 判断坐标是否在 8x8 范围内 */
+    /** Check if the coordinates are within the 8x8 bounds */
     private boolean inBounds(int r, int c) {
         return 0 <= r && r < 8 && 0 <= c && c < 8;
     }
 
-    /** 获取某格子的棋子 */
+    /** Get the piece at a specific square */
     public Piece getPieceAt(int r, int c) {
         return inBounds(r, c) ? squares[r][c] : null;
     }
 
-    /** 设置某格子的棋子（并同步更新棋子的坐标） */
+    /** Set the piece at a specific square (and update the piece's coordinates) */
     public void setPieceAt(int r, int c, Piece p) {
         if (!inBounds(r, c)) return;
         squares[r][c] = p;
-        if (p != null) p.setPosition(r, c); // 🔥 同步坐标
+        if (p != null) p.setPosition(r, c); // 🔥 Sync coordinates
     }
 
-    /** 清空某格子 */
+    /** Clear a specific square */
     public void clearSquare(int r, int c) {
         if (inBounds(r, c)) squares[r][c] = null;
     }
 
     /**
-     * 执行一次移动（不判断是否合法）
-     * 同步棋子的坐标，并返回被吃掉的棋子（如果有）
+     * Executes a move (does not check legality)
+     * Syncs the piece's coordinates and returns the captured piece (if any)
      */
     public Piece movePiece(int sr, int sc, int er, int ec) {
         if (!inBounds(sr, sc) || !inBounds(er, ec)) return null;
@@ -93,14 +95,14 @@ public class Board {
         squares[er][ec] = moving;
         squares[sr][sc] = null;
 
-        if (moving != null) moving.setPosition(er, ec); // 🔥 更新棋子位置
+        if (moving != null) moving.setPosition(er, ec); //  Sync coordinates
 
         return captured;
     }
 
-    /* ---------- 打印棋盘 ---------- */
+    /* ---------- Print the Board ---------- */
 
-    /** 打印棋盘（上 8 下 1，列 a..h） */
+    /** Print the board (rank 8 at the top, 1 at the bottom, files a..h) */
     public void printBoard() {
         System.out.println("   a b c d e f g h");
         for (int r = 0; r < 8; r++) {
@@ -115,9 +117,12 @@ public class Board {
         System.out.println("   a b c d e f g h");
     }
 
-    /* ---------- 坐标工具 ---------- */
+    /* ---------- Coordinate Utilities ---------- */
 
-    /** 将 "e2" 转换为数组下标 (6,4)（白方在下） */
+    /** Converts "e2" to array indices (6,4) (White at the bottom) */
+    /*  since array index is [row][col] but chess notation is [file][rank]
+    /*  e.g., 'a'->0, 'b'->1, ..., 'h'->7; '1'->7, '2'->6, ..., '8'->0
+    */
     public static int[] fromAlg(String alg) {
         if (alg == null || alg.length() != 2) return null;
         char file = Character.toLowerCase(alg.charAt(0)); // a..h
@@ -128,7 +133,7 @@ public class Board {
         return new int[]{row, col};
     }
 
-    /** 将数组下标 (6,4) 转换为 "e2" */
+    /** returns (row,col) as "e2" (White at the bottom) */
     public static String toAlg(int row, int col) {
         if (row < 0 || row > 7 || col < 0 || col > 7) return "??";
         char file = (char) ('a' + col);
@@ -138,18 +143,18 @@ public class Board {
 
 
 
-    /* ---------- 深拷贝 & 恢复，用于 undo/redo ---------- */
-    /** 深拷贝整个棋盘，复制所有棋子（独立新对象） */
+    /* ---------- Deep Copy & Restore for Undo/Redo ---------- */
+    /** Deep copies the entire board, duplicating all pieces (independent new objects) */
     public Board deepCopy() {
         Board copy = new Board();
-        // 清空默认开局
+        // Clear the default starting position
         for (int r = 0; r < 8; r++) {
             for (int c = 0; c < 8; c++) {
                 copy.setPieceAt(r, c, null);
             }
         }
 
-        // 复制当前每个棋子
+        // Copy the current pieces
         for (int r = 0; r < 8; r++) {
             for (int c = 0; c < 8; c++) {
                 Piece p = this.getPieceAt(r, c);
@@ -161,7 +166,7 @@ public class Board {
         return copy;
     }
 
-    /** 把 src 的棋盘内容复制到当前对象（保持引用不变） */
+    /** Copies the board state from src to this board (references remain unchanged) */
     public void copyFrom(Board src) {
         for (int r = 0; r < 8; r++) {
             for (int c = 0; c < 8; c++) {
@@ -171,7 +176,7 @@ public class Board {
         }
     }
 
-
+    /** Helper to clone a piece (creates a new instance of the same type and color) */
     private static Piece clonePiece(Piece p) {
         return switch (p.getType()) {
             case PAWN   -> new Pawn  (p.getColor(), p.getX(), p.getY());

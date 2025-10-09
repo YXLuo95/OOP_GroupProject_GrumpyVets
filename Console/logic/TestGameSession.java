@@ -9,9 +9,9 @@ public class TestGameSession {
         System.out.println("game start");
         board.printBoard();
 
-        // 白 e2->e4
+        // white e2->e4
         session.playMove(6, 4, 4, 4);
-        // 黑 e7->e5
+        // black e7->e5
         session.playMove(1, 4, 3, 4);
         System.out.println("\nmoves: e2e4 e7e5");
         board.printBoard();
