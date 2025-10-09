@@ -136,18 +136,51 @@ public class Board {
         return "" + file + rank;
     }
 
-    /** 复制棋盘（浅拷贝；GUI 时可扩展为深拷贝） */
-    public Board copy() {
-        Board b2 = new Board();
-        // 清除新棋盘的默认开局
-        for (int r = 0; r < 8; r++) for (int c = 0; c < 8; c++) b2.squares[r][c] = null;
-        // 拷贝当前局面
+
+
+    /* ---------- 深拷贝 & 恢复，用于 undo/redo ---------- */
+    /** 深拷贝整个棋盘，复制所有棋子（独立新对象） */
+    public Board deepCopy() {
+        Board copy = new Board();
+        // 清空默认开局
         for (int r = 0; r < 8; r++) {
             for (int c = 0; c < 8; c++) {
-                Piece p = this.squares[r][c];
-                b2.squares[r][c] = p;
+                copy.setPieceAt(r, c, null);
             }
         }
-        return b2;
+
+        // 复制当前每个棋子
+        for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+                Piece p = this.getPieceAt(r, c);
+                if (p != null) {
+                    copy.setPieceAt(r, c, clonePiece(p));
+                }
+            }
+        }
+        return copy;
     }
+
+    /** 把 src 的棋盘内容复制到当前对象（保持引用不变） */
+    public void copyFrom(Board src) {
+        for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+                Piece p = src.getPieceAt(r, c);
+                this.setPieceAt(r, c, (p == null) ? null : clonePiece(p));
+            }
+        }
+    }
+
+
+    private static Piece clonePiece(Piece p) {
+        return switch (p.getType()) {
+            case PAWN   -> new Pawn  (p.getColor(), p.getX(), p.getY());
+            case ROOK   -> new Rook  (p.getColor(), p.getX(), p.getY());
+            case KNIGHT -> new Knight(p.getColor(), p.getX(), p.getY());
+            case BISHOP -> new Bishop(p.getColor(), p.getX(), p.getY());
+            case QUEEN  -> new Queen (p.getColor(), p.getX(), p.getY());
+            case KING   -> new King  (p.getColor(), p.getX(), p.getY());
+        };
+    }
+
 }
