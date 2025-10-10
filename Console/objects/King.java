@@ -26,4 +26,14 @@ public class King extends Piece {
         }
         return false;
     }
+
+    @Override
+    public boolean attacks(Board board, int sr, int sc, int er, int ec) {
+        //check boundary    
+        if (!inside(er, ec)) return false;
+
+        // Kings attack one square in any direction
+        return Math.max(Math.abs(er - sr), Math.abs(ec - sc)) == 1;
+    }
+
 }

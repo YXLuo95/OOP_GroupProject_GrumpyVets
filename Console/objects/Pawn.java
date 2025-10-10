@@ -25,6 +25,11 @@ public class Pawn extends Piece {
      */
     @Override
     public boolean canMove(Board board, int sr, int sc, int er, int ec) {
+        
+        // added boundary check
+        // to implement checkmate detection
+        if (!inside(er, ec)) return false;
+
         int direction = (this.color == PieceColor.WHITE) ? -1 : 1;  // white moves up, black moves down
         int dr = er - sr;
         int dc = Math.abs(ec - sc);
@@ -52,11 +57,25 @@ public class Pawn extends Piece {
 
         // --- Case 2: Diagonal capture ---
         if (dc == 1 && dr == direction) {
-            // ✅ reuse the helper from Piece
+            // reuse the helper from Piece
             return canCaptureOrMove(board, er, ec) && target != null;
         }
 
         // --- Otherwise invalid ---
         return false;
     }
+
+    // a method to promote the pawn to another piece type
+    @Override
+    public boolean attacks(Board board, int sr, int sc, int er, int ec) {
+        int dir = (this.color == PieceColor.WHITE) ? -1 : 1;
+        return (er - sr == dir) && (Math.abs(ec - sc) == 1);
+    }
+
+    // check if the pawn can promote based on its current row
+    public boolean canPromote(int row) {
+        return (this.color == PieceColor.WHITE && row == 0) || (this.color == PieceColor.BLACK && row == 7);
+    }
+
+    
 }
