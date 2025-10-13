@@ -117,6 +117,8 @@ public class Board {
     }
 
     // ---------- Deep copy ----------
+    // Creates a deep copy of the board and all its pieces
+    // use in GameSession's undo/redo and Rules checks
     public Board deepCopy() {
         Board copy = new Board();
         // Clear the default starting position of the copy
