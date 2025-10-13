@@ -1,5 +1,7 @@
 # GrumpyVets Chess (Java)
+Project Description
 
+This is a simple, testable Java chess project built to practice object‑oriented design and core game logic. The first milestone is a console application with correct move validation (including checks and captures). Future work will add special moves (castling, en passant, promotion) and a JavaFX GUI.
 ## Features
 
 * Console-based chess board printing
