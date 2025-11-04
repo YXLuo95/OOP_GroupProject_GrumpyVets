@@ -19,6 +19,7 @@ OOP_GroupProject_GrumpyVets/
 │   │   ├── Board.java          # Chess board representation
 │   │   ├── BoardPrinter.java   # Console board display
 │   │   ├── GameSession.java    # Game state management
+│   │   ├── GameSave.java       # Save/load game functionality
 │   │   ├── Notation.java       # Chess notation handling
 │   │   ├── Rules.java          # Chess rules validation
 │   │   └── TestGameSession.java # Game logic testing
@@ -35,9 +36,11 @@ OOP_GroupProject_GrumpyVets/
 │   │   ├── PieceType.java      # Piece type enumeration
 │   │   └── PromotionChoice.java # Pawn promotion options
 │   └── MainConsole.java # Console application entry point
-└── GUI/                 # Graphical user interface layer
-    ├── MainMenuApp.java    # Main menu and application entry
-    └── Singleplayer.java   # Single player game interface
+├── GUI/                 # Graphical user interface layer
+│   ├── MainMenuApp.java    # Main menu and application entry
+│   └── Singleplayer.java   # Single player game interface
+└── saves/               # Game save files directory (auto-created)
+    └── *.chess          # Saved game files
 ```
 
 ## Quick Start
@@ -83,14 +86,22 @@ java -cp ".;Console;GUI" MainMenuApp
 - **Move History**: Complete game history with undo/redo functionality
 - **Piece Logic**: Individual piece classes with proper movement rules
 - **Board Representation**: Efficient 8×8 board with position tracking
+- **Save System**: Serializable game state for persistence
 
 ### Graphical User Interface (GUI Package)
 - **Interactive Board**: Click-to-move interface with visual feedback
 - **Unicode Pieces**: Clear piece representation using chess symbols
 - **Real-time Updates**: Instant board updates and status information
 - **Intuitive Controls**: Easy-to-use toolbar with game management buttons
-- **Modern Design**: Clean, dark-themed main menu interface
+- **Modern Design**: Clean, centered board layout with minimal interface
 - **Window Management**: Proper window switching between menu and game
+
+### Save & Load System
+- **Game Persistence**: Save current game state at any time during play
+- **Save Management**: Organized save files in dedicated `saves/` directory
+- **Load from Menu**: Select and load saved games directly from main menu
+- **State Restoration**: Complete restoration of board position, turn, and game status
+- **Save Metadata**: Includes save date and custom save names for easy identification
 
 ### Integration Features
 - **Seamless Logic Integration**: GUI uses Console engine for all game logic
@@ -124,11 +135,23 @@ java -cp ".;Console;GUI" MainMenuApp
    - Proper turn alternation (White moves first)
    - All standard chess rules apply (check, checkmate, castling, en passant)
 
-3. **Toolbar Buttons**:
+3. **In-Game Controls**:
    - **Back to Menu**: Return to main menu
    - **New Game**: Reset board and start fresh
+   - **Save Game**: Save current game state with custom name
    - **Undo**: Take back the last move
    - **Redo**: Replay an undone move
+
+4. **Save & Load Operations**:
+   - **Save During Play**: Click "Save Game" button and enter a save name
+   - **Load from Menu**: Use "Saved Game" button on main menu
+   - **Save Files**: Automatically stored in `saves/` directory as `.chess` files
+   - **Continue Saved Games**: Loaded games maintain full functionality including save/undo/redo
+
+### Menu Navigation
+- **Single Player**: Start a new chess game
+- **Saved Game**: Browse and load previously saved games  
+- **Multiplayer**: (Future feature - currently shows placeholder)
 
 ### Debug Information
 - Console window displays move validation and game logic details
@@ -150,9 +173,11 @@ java -cp ".;Console;GUI" MainMenuApp
 - **Modular Architecture**: 
   - **Console Package**: Complete, standalone chess engine
   - **GUI Package**: Pure presentation layer using Console logic
+  - **Save System**: Serialization-based game persistence
   - **Clean Interfaces**: Well-defined boundaries between components
 
 - **Event-Driven Programming**: Swing-based event handling with mouse interactions
+- **File I/O Operations**: Java serialization for game state persistence
 - **Cross-Platform Compatibility**: Runs on any system with Java 8+
 - **Build Automation**: One-click compilation and execution via run.bat
 
@@ -161,24 +186,27 @@ java -cp ".;Console;GUI" MainMenuApp
 - **Java Version**: Java 8 (JDK 1.8) or higher
 - **Operating System**: Windows (run.bat), Linux/Mac (manual compilation)
 - **Memory**: Minimal requirements (< 50MB RAM)
-- **Display**: Any resolution supporting 800×850 window size
+- **Display**: Any resolution supporting 700×750 window size
+- **Storage**: Minimal space for save files (< 1KB per save)
 
 ## Project Status
 
 ✅ **Completed Features:**
-- Complete chess rule implementation
-- Functional GUI with all basic controls
+- Complete chess rule implementation with all standard moves
+- Functional GUI with intuitive click-to-move interface
 - Move validation and game state management
-- Undo/redo functionality
-- Clean, professional user interface
+- Undo/redo functionality with complete move history
+- Save/load game system with persistent storage
+- Clean, professional user interface with centered board layout
+- Main menu with game selection and save management
 
 🚧 **Planned Enhancements:**
 - Network multiplayer support
-- Save/load game functionality  
 - AI opponent with difficulty levels
 - Enhanced graphics and animations
-- Chess notation display and export
+- Chess notation display and export (PGN format)
 - Game statistics and move analysis
+- Tournament mode and time controls
 
 ## Troubleshooting
 
@@ -186,11 +214,13 @@ java -cp ".;Console;GUI" MainMenuApp
 1. **Compilation Errors**: Ensure Java JDK is installed and in PATH
 2. **GUI Not Appearing**: Check if Java Swing is supported on your system
 3. **Script Won't Run**: Right-click run.bat → "Run as Administrator" if needed
+4. **Save Files Not Found**: The `saves/` directory is created automatically on first save
 
 ### Development Setup
 - **IDE**: Works with any Java IDE (VS Code, IntelliJ, Eclipse)
 - **Debugging**: Enable console output for detailed game logic information
 - **Testing**: Use Console package independently for logic testing
+- **Save System**: Saves are stored as serialized `.chess` files in `saves/` directory
 
 ## Contributing
 

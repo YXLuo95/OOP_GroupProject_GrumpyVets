@@ -1,5 +1,6 @@
 import logic.GameSession;
 import logic.Board;
+import logic.GameSave;
 import objects.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -108,6 +109,13 @@ public class Singleplayer extends JFrame {
         });
         toolbar.add(redoButton);
         
+        toolbar.addSeparator();
+        
+        // Save game button
+        JButton saveButton = new JButton("Save Game");
+        saveButton.addActionListener(e -> saveGame());
+        toolbar.add(saveButton);
+
         return toolbar;
     }
 
@@ -124,6 +132,27 @@ public class Singleplayer extends JFrame {
         }
     }
     
+    private void saveGame() {
+        String saveName = JOptionPane.showInputDialog(this, 
+            "Enter save name:", 
+            "Save Game", 
+            JOptionPane.PLAIN_MESSAGE);
+        
+        if (saveName != null && !saveName.trim().isEmpty()) {
+            if (GameSave.saveGame(gameSession, saveName.trim())) {
+                JOptionPane.showMessageDialog(this, 
+                    "Game saved successfully!", 
+                    "Save Complete", 
+                    JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, 
+                    "Failed to save game!", 
+                    "Save Error", 
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
     // Inner chess board class
     private class ChessBoard extends JPanel {
         private final int BOARD_SIZE = 8;

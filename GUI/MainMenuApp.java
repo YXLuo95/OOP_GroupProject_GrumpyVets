@@ -46,11 +46,10 @@ class MainMenuFrame extends JFrame {
         styleBlack(btnSingle); styleBlack(btnMulti); styleBlack(btnSaved);
         btnSingle.addActionListener(e -> openSinglePlayer());
         btnMulti.addActionListener(e -> placeholder("Multiplayer"));
-        btnSaved.addActionListener(e -> placeholder("Saved Game"));
+        btnSaved.addActionListener(e -> openSavedGame());
         center.add(btnSingle, pos(gbc, row++));
         center.add(btnMulti,  pos(gbc, row++));
         center.add(btnSaved,  pos(gbc, row++));
-        center.add(note("(Navigation not implemented yet)"), pos(gbc, row++));
 
         add(center, BorderLayout.CENTER);
 
@@ -86,6 +85,93 @@ class MainMenuFrame extends JFrame {
                 }
             });
         });
+    }
+
+    private void openSavedGame() {
+        // Import GameSave for this method
+        try {
+            Class<?> gameSaveClass = Class.forName("logic.GameSave");
+            java.lang.reflect.Method listSaveFiles = gameSaveClass.getMethod("listSaveFiles");
+            String[] saveFiles = (String[]) listSaveFiles.invoke(null);
+            
+            if (saveFiles.length == 0) {
+                JOptionPane.showMessageDialog(this, 
+                    "No saved games found!", 
+                    "Load Game", 
+                    JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+            
+            String selectedFile = (String) JOptionPane.showInputDialog(this,
+                "Select a saved game to load:",
+                "Load Saved Game",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                saveFiles,
+                saveFiles[0]);
+            
+            if (selectedFile != null) {
+                // Hide main menu and open game with loaded state
+                setVisible(false);
+                
+                SwingUtilities.invokeLater(() -> {
+                    Singleplayer singlePlayerWindow = new Singleplayer();
+                    
+                    // Load the saved game into the window
+                    try {
+                        java.lang.reflect.Method loadGame = gameSaveClass.getMethod("loadGame", String.class);
+                        Object gameSave = loadGame.invoke(null, selectedFile);
+                        
+                        if (gameSave != null) {
+                            // Apply the save to the game session
+                            java.lang.reflect.Method applyToGameSession = gameSave.getClass().getMethod("applyToGameSession", 
+                                Class.forName("logic.GameSession"));
+                            java.lang.reflect.Field gameSessionField = singlePlayerWindow.getClass().getDeclaredField("gameSession");
+                            gameSessionField.setAccessible(true);
+                            Object gameSession = gameSessionField.get(singlePlayerWindow);
+                            applyToGameSession.invoke(gameSave, gameSession);
+                            
+                            // Update the display
+                            java.lang.reflect.Method updateStatus = singlePlayerWindow.getClass().getDeclaredMethod("updateStatus");
+                            updateStatus.setAccessible(true);
+                            updateStatus.invoke(singlePlayerWindow);
+                            
+                            singlePlayerWindow.repaint();
+                            
+                            JOptionPane.showMessageDialog(singlePlayerWindow, 
+                                "Game loaded successfully!", 
+                                "Load Complete", 
+                                JOptionPane.INFORMATION_MESSAGE);
+                        } else {
+                            JOptionPane.showMessageDialog(singlePlayerWindow, 
+                                "Failed to load game!", 
+                                "Load Error", 
+                                JOptionPane.ERROR_MESSAGE);
+                        }
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(singlePlayerWindow, 
+                            "Error loading game: " + ex.getMessage(), 
+                            "Load Error", 
+                            JOptionPane.ERROR_MESSAGE);
+                    }
+                    
+                    singlePlayerWindow.setVisible(true);
+                    
+                    // When single player window closes, show main menu again
+                    singlePlayerWindow.addWindowListener(new WindowAdapter() {
+                        @Override
+                        public void windowClosed(WindowEvent e) {
+                            setVisible(true);
+                        }
+                    });
+                });
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, 
+                "Error accessing save system: " + e.getMessage(), 
+                "System Error", 
+                JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void placeholder(String where) {

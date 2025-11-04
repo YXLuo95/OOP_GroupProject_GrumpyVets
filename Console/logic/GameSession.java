@@ -121,4 +121,12 @@ public class GameSession {
     public PieceColor getCurrentTurn() { return currentTurn; }
     public Board getBoard() { return board; }
     public boolean isGameOver() { return gameOver; }
+    
+    // Setters for save/load functionality
+    public void setCurrentTurn(PieceColor turn) { this.currentTurn = turn; }
+    public void setGameOver(boolean gameOver) { this.gameOver = gameOver; }
+    public void clearHistory() { 
+        undoStack.clear(); 
+        redoStack.clear(); 
+    }
 }
