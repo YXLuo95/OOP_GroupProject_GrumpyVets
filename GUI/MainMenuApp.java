@@ -43,7 +43,7 @@ class MainMenuFrame extends JFrame {
         center.add(title("Chess"), pos(gbc, row++));
         center.add(subtitle("Main Menu"), pos(gbc, row++));
         styleBlack(btnSingle); styleBlack(btnMulti); styleBlack(btnSaved);
-        btnSingle.addActionListener(e -> placeholder("Single Player"));
+        btnSingle.addActionListener(e -> openSinglePlayer());
         btnMulti.addActionListener(e -> placeholder("Multiplayer"));
         btnSaved.addActionListener(e -> placeholder("Saved Game"));
         center.add(btnSingle, pos(gbc, row++));
@@ -66,6 +66,25 @@ class MainMenuFrame extends JFrame {
         setSize(520, 380);
         setLocationRelativeTo(null);
         setVisible(true);
+    }
+
+    private void openSinglePlayer() {
+        // 隐藏主菜单
+        setVisible(false);
+        
+        // 打开单人游戏窗口
+        SwingUtilities.invokeLater(() -> {
+            Singleplayer singlePlayerWindow = new Singleplayer();
+            singlePlayerWindow.setVisible(true);
+            
+            // 当单人游戏窗口关闭时，重新显示主菜单
+            singlePlayerWindow.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosed(WindowEvent e) {
+                    setVisible(true);
+                }
+            });
+        });
     }
 
     private void placeholder(String where) {
