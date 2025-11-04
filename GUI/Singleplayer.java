@@ -42,9 +42,11 @@ public class Singleplayer extends JFrame {
         JToolBar toolbar = createToolbar();
         add(toolbar, BorderLayout.NORTH);
         
-        // Center chess board
+        // Center chess board with proper centering
         chessBoard = new ChessBoard();
-        add(chessBoard, BorderLayout.CENTER);
+        JPanel centerPanel = new JPanel(new GridBagLayout());
+        centerPanel.add(chessBoard);
+        add(centerPanel, BorderLayout.CENTER);
         
         // Status label at bottom
         statusLabel = new JLabel("White to move", SwingConstants.CENTER);
@@ -52,8 +54,8 @@ public class Singleplayer extends JFrame {
         statusLabel.setFont(new Font("Arial", Font.BOLD, 14));
         add(statusLabel, BorderLayout.SOUTH);
         
-        // Set window properties
-        setSize(800, 850);
+        // Set window properties - optimized for centered chess board
+        setSize(700, 750); // Reduced width since no side panel
         setLocationRelativeTo(null);
         setResizable(false);
         
@@ -108,7 +110,7 @@ public class Singleplayer extends JFrame {
         
         return toolbar;
     }
-    
+
     private void updateStatus() {
         // Update status label based on current turn and game state
         PieceColor currentTurn = gameSession.getCurrentTurn();
@@ -125,7 +127,7 @@ public class Singleplayer extends JFrame {
     // Inner chess board class
     private class ChessBoard extends JPanel {
         private final int BOARD_SIZE = 8;
-        private final int CELL_SIZE = 80;
+        private final int CELL_SIZE = 75; // Optimized size for centered layout
         private int selectedRow = -1;
         private int selectedCol = -1;
         
