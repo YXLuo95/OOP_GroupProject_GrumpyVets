@@ -8,7 +8,8 @@ import javax.swing.*;
  *
  * Requirements addressed:
  * - A single window with three buttons: Single Player, Multiplayer, Saved Game
- * - No real navigation yet (shows placeholder dialogs)
+ * - Single Player button opens a new window (Singleplayer.java)
+ * - Multiplayer and Saved Game buttons show a placeholder dialog
  * - Clean, centered layout; ESC quits; Enter triggers focused button
  *
  * Compile: javac MainMenuApp.java
@@ -69,15 +70,15 @@ class MainMenuFrame extends JFrame {
     }
 
     private void openSinglePlayer() {
-        // 隐藏主菜单
+        // Hide main menu
         setVisible(false);
         
-        // 打开单人游戏窗口
+        // Open single player game window
         SwingUtilities.invokeLater(() -> {
             Singleplayer singlePlayerWindow = new Singleplayer();
             singlePlayerWindow.setVisible(true);
             
-            // 当单人游戏窗口关闭时，重新显示主菜单
+            // When single player window closes, show main menu again
             singlePlayerWindow.addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosed(WindowEvent e) {
@@ -118,8 +119,8 @@ class MainMenuFrame extends JFrame {
     }
 
     private void styleBlack(JButton b) {
-    b.setBackground(Color.BLACK);     // 黑色背景
-    b.setForeground(Color.WHITE);     // 白色文字（黑底更易读）
+    b.setBackground(Color.BLACK);     // Black background
+    b.setForeground(Color.WHITE);     // White text (better readability on black)
     b.setOpaque(true);        
     b.setContentAreaFilled(true);
     b.setBorderPainted(false);

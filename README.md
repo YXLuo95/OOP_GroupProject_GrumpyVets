@@ -50,34 +50,36 @@ java -cp ".;Console;GUI" MainMenuApp
 
 ## Features
 
-### GUI Version (Current)
-- **Main Menu**: Clean interface with Single Player, Multiplayer, and Saved Game options
-- **Chess Board**: Complete 8x8 board with Unicode chess pieces (♔♕♖♗♘♙)
-- **Interactive Gameplay**: Click to select and move pieces
-- **Visual Feedback**: Yellow highlighting for selected pieces
-- **Turn Management**: Automatic turn switching between White and Black
-- **Game Controls**: New Game and Back to Menu options
+### GUI Version with Console Rules Integration
+- **Full Chess Logic**: Uses the complete Console game engine for move validation
+- **Rule Enforcement**: All standard chess rules including check, checkmate, and stalemate
+- **Interactive Board**: 8x8 visual chess board with Unicode pieces (♔♕♖♗♘♙ for white, ♚♛♜♝♞♟ for black)
+- **Smart Move Validation**: Prevents illegal moves and self-check situations
+- **Game State Management**: Proper turn switching and game over detection
+- **Undo/Redo**: Full move history with undo and redo functionality
+- **Visual Feedback**: Yellow highlighting for selected pieces and clear status updates
 
-### Console Version (Legacy)
-- Console-based chess board printing
-- Input moves using chess notation (e.g., `e2e4`)
-- Turn-based play (White / Black)
-- Basic move validation (pawn, rook, knight, bishop, queen, king)
-- Capturing pieces
-- Check / Checkmate detection
-- Special moves (castling, en passant, pawn promotion)
+### Main Menu
+- Clean and intuitive main menu interface
+- Three primary buttons: Single Player, Multiplayer, Saved Game
+- ESC key to exit, Enter key to confirm
+- Modern dark theme design
 
 ## How to Play
 
-1. **Start Program**: Run `run.bat` or use manual compilation
-2. **Main Menu**: Click "Single Player" to start a game
+1. **Start Program**: Run `run.bat` and choose option 1 for GUI, or option 2 to test console rules
+2. **Main Menu**: Click "Single Player" to start a chess game
 3. **Game Controls**:
    - Click on a chess piece to select it (highlighted in yellow)
    - Click on the destination square to move the piece
-   - Status bar shows whose turn it is
-4. **Game Options**:
+   - Only legal moves are allowed - the game enforces all chess rules
+   - Status bar shows whose turn it is and game state
+4. **Game Features**:
    - "New Game": Reset the board for a new game
+   - "Undo": Take back the last move
+   - "Redo": Replay an undone move
    - "Back to Menu": Return to the main menu
+5. **Debug Output**: Console window shows move validation and game logic information
 
 ## Technical Features
 
