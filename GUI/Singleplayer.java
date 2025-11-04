@@ -4,18 +4,27 @@ import objects.*;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-
+/*
+ * Minimal Single Player Chess GUI (Swing) integrating with Console logic.  
+ * - A window with a chess board, toolbar (New Game, Undo, Redo, Back to Menu), and status label
+ * - Uses Console logic (GameSession, Board, Piece) for game rules and state management
+ * - Render 8x8 chess board, pieces, selection, and move handling
+ * - GUI responds to user clicks to select/move pieces, updates status label
+ */
 public class Singleplayer extends JFrame {
+    // Inner chess board class
     private ChessBoard chessBoard;
     private GameSession gameSession;
     private JLabel statusLabel;
     
+    // Constructor
     public Singleplayer() {
         super("Chess - Single Player");
         initializeGame();
         setupUI();
     }
     
+    // Initialize game session and board
     private void initializeGame() {
         // Create chess board and game session
         Board board = new Board();
@@ -23,7 +32,9 @@ public class Singleplayer extends JFrame {
         gameSession.start(); // Start new game
     }
     
+    // Setup GUI components
     private void setupUI() {
+        // Window close operation
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
         
@@ -35,7 +46,7 @@ public class Singleplayer extends JFrame {
         chessBoard = new ChessBoard();
         add(chessBoard, BorderLayout.CENTER);
         
-        // 底部状态栏
+        // Status label at bottom
         statusLabel = new JLabel("White to move", SwingConstants.CENTER);
         statusLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         statusLabel.setFont(new Font("Arial", Font.BOLD, 14));
@@ -99,9 +110,11 @@ public class Singleplayer extends JFrame {
     }
     
     private void updateStatus() {
+        // Update status label based on current turn and game state
         PieceColor currentTurn = gameSession.getCurrentTurn();
         String turnText = (currentTurn == PieceColor.WHITE) ? "White" : "Black";
         
+        // Check for game over
         if (gameSession.isGameOver()) {
             statusLabel.setText("Game Over");
         } else {
@@ -116,10 +129,12 @@ public class Singleplayer extends JFrame {
         private int selectedRow = -1;
         private int selectedCol = -1;
         
+        // Constructor
         public ChessBoard() {
             setPreferredSize(new Dimension(BOARD_SIZE * CELL_SIZE, BOARD_SIZE * CELL_SIZE));
             setBackground(Color.WHITE);
             
+            // Mouse listener for clicks
             addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
@@ -133,6 +148,7 @@ public class Singleplayer extends JFrame {
             });
         }
         
+        // Handle cell click for selecting/moving pieces
         private void handleCellClick(int row, int col) {
             if (gameSession.isGameOver()) {
                 return; // Game over, no moves allowed
@@ -171,11 +187,13 @@ public class Singleplayer extends JFrame {
             }
         }
         
+        // Reset selection
         public void resetSelection() {
             selectedRow = -1;
             selectedCol = -1;
         }
         
+        // Paint component
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
@@ -210,9 +228,11 @@ public class Singleplayer extends JFrame {
             drawPieces(g2d);
         }
         
+        // Draw pieces on board
         private void drawPieces(Graphics2D g2d) {
             g2d.setFont(new Font("Serif", Font.BOLD, 48));
             
+            // Iterate over board squares
             for (int row = 0; row < BOARD_SIZE; row++) {
                 for (int col = 0; col < BOARD_SIZE; col++) {
                     Piece piece = gameSession.getBoard().getPieceAt(row, col);
@@ -223,6 +243,7 @@ public class Singleplayer extends JFrame {
             }
         }
         
+        // Draw individual piece
         private void drawPiece(Graphics2D g2d, Piece piece, int row, int col) {
             String symbol = getPieceSymbol(piece);
             
@@ -252,6 +273,7 @@ public class Singleplayer extends JFrame {
             g2d.drawString(symbol, x, y);
         }
         
+        // Get Unicode symbol for piece
         private String getPieceSymbol(Piece piece) {
             boolean isWhite = piece.getColor() == PieceColor.WHITE;
             
