@@ -9,16 +9,16 @@ public class NetworkMessage implements Serializable {
     private static final long serialVersionUID = 1L;
     
     public enum Type {
-        CONNECTION_REQUEST,  // 连接请求
-        CONNECTION_ACK,      // 连接确认
-        DISCONNECT,          // 断开连接
-        GAME_MOVE,          // 游戏移动
-        CHAT,               // 聊天消息
-        GAME_STATE,         // 游戏状态
-        READY,              // 准备状态
-        RESTART_REQUEST,    // 重新开始请求
-        UNDO_REQUEST,       // 悔棋请求
-        UNDO_RESPONSE       // 悔棋回应
+        CONNECTION_REQUEST,  // Connection request
+        CONNECTION_ACK,      // Connection acknowledgment
+        DISCONNECT,          // Disconnect
+        GAME_MOVE,          // Game move
+        CHAT,               // Chat message
+        GAME_STATE,         // Game state
+        READY,              // Ready state
+        RESTART_REQUEST,    // Restart request
+        UNDO_REQUEST,       // Undo request
+        UNDO_RESPONSE       // Undo response
     }
     
     private Type type;
