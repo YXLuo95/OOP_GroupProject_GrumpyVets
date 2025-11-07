@@ -6,8 +6,8 @@ import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 /**
- * P2P网络连接管理器
- * 处理Socket连接、消息发送接收
+ * P2P network connection manager
+ * Handles Socket connections, message sending and receiving
  */
 public class NetworkConnection {
     private Socket socket;
@@ -26,22 +26,22 @@ public class NetworkConnection {
     }
     
     /**
-     * 设置消息处理器
+     * Set message handler
      */
     public void setMessageHandler(Consumer<NetworkMessage> handler) {
         this.messageHandler = handler;
     }
     
     /**
-     * 作为主机启动服务器
+     * Start server as host
      */
     public boolean startAsHost(int port) {
         try {
             isHost = true;
             serverSocket = new ServerSocket(port);
             System.out.println("Host started on port " + port + ", waiting for connection...");
-            
-            // 异步等待连接
+
+            // Asynchronously wait for connection
             executor.submit(() -> {
                 try {
                     socket = serverSocket.accept();
@@ -51,11 +51,11 @@ public class NetworkConnection {
                     setupStreams();
                     connected = true;
                     startMessageListener();
-                    
-                    // 发送连接确认消息
-                    sendMessage(new NetworkMessage(NetworkMessage.Type.CONNECTION_ACK, 
-                                                 "Host ready", connectionId));
-                    
+
+                    // Send connection acknowledgment message
+                    sendMessage(new NetworkMessage(NetworkMessage.Type.CONNECTION_ACK,
+                            "Host ready", connectionId));
+
                 } catch (IOException e) {
                     System.err.println("Host connection error: " + e.getMessage());
                     connected = false;
@@ -70,7 +70,7 @@ public class NetworkConnection {
     }
     
     /**
-     * 作为客户端连接到主机
+     * Connect to host as client
      */
     public boolean connectToHost(String hostAddress, int port) {
         try {
@@ -86,7 +86,7 @@ public class NetworkConnection {
             connected = true;
             startMessageListener();
             
-            // 发送连接请求
+            // Send connection request
             sendMessage(new NetworkMessage(NetworkMessage.Type.CONNECTION_REQUEST, 
                                          "Client ready", connectionId));
             
@@ -98,17 +98,17 @@ public class NetworkConnection {
     }
     
     /**
-     * 设置输入输出流
+     * Set up input and output streams
      */
     private void setupStreams() throws IOException {
-        // 先创建输出流，再创建输入流
+        // input and output streams
         out = new ObjectOutputStream(socket.getOutputStream());
         out.flush();
         in = new ObjectInputStream(socket.getInputStream());
     }
     
     /**
-     * 启动消息监听线程
+     * Start message listener thread
      */
     private void startMessageListener() {
         executor.submit(() -> {
@@ -131,7 +131,7 @@ public class NetworkConnection {
     }
     
     /**
-     * 处理接收到的消息
+     * Handle received messages
      */
     private void handleReceivedMessage(NetworkMessage message) {
         System.out.println("Received: " + message.getType() + " from " + message.getSenderId());
@@ -142,7 +142,7 @@ public class NetworkConnection {
     }
     
     /**
-     * 发送消息
+     * Send message
      */
     public boolean sendMessage(NetworkMessage message) {
         if (!connected || out == null) {
@@ -166,7 +166,7 @@ public class NetworkConnection {
     }
     
     /**
-     * 发送游戏移动
+     * send game move
      */
     public boolean sendMove(int startRow, int startCol, int endRow, int endCol) {
         GameMove move = new GameMove(startRow, startCol, endRow, endCol);
@@ -175,7 +175,7 @@ public class NetworkConnection {
     }
     
     /**
-     * 发送聊天消息
+     * Send chat message
      */
     public boolean sendChat(String text) {
         NetworkMessage message = new NetworkMessage(NetworkMessage.Type.CHAT, text, connectionId);
@@ -183,7 +183,7 @@ public class NetworkConnection {
     }
     
     /**
-     * 发送游戏状态
+     * Send game state
      */
     public boolean sendGameState(String state) {
         NetworkMessage message = new NetworkMessage(NetworkMessage.Type.GAME_STATE, state, connectionId);
@@ -191,7 +191,7 @@ public class NetworkConnection {
     }
     
     /**
-     * 断开连接
+     * Disconnect
      */
     public void disconnect() {
         connected = false;

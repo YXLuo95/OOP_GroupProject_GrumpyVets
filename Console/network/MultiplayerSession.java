@@ -5,8 +5,8 @@ import logic.GameSession;
 import objects.PieceColor;
 
 /**
- * 多人游戏会话管理器
- * 整合网络连接和游戏逻辑
+ * multiplayer session class
+ * Integrates network communication and game logic
  */
 public class MultiplayerSession {
     private GameSession gameSession;
@@ -16,8 +16,8 @@ public class MultiplayerSession {
     private String opponentId;
     private boolean isMyTurn;
     private volatile boolean waitingForOpponent = false;
-    
-    // 状态回调接口
+
+    // Game state callback interface
     public interface GameStateCallback {
         void onGameStateChanged(String state);
         void onChatReceived(String message);
@@ -33,24 +33,24 @@ public class MultiplayerSession {
         this.network = new NetworkConnection();
         this.myPlayerId = playerId;
         
-        // 设置网络消息处理器
+        // set network message handler
         network.setMessageHandler(this::handleNetworkMessage);
     }
     
     /**
-     * 设置状态回调
+     * Set game state callback
      */
     public void setGameStateCallback(GameStateCallback callback) {
         this.callback = callback;
     }
     
     /**
-     * 作为主机启动游戏
+     * host a game
      */
     public boolean hostGame(int port) {
         if (network.startAsHost(port)) {
-            myColor = PieceColor.WHITE; // 主机为白方
-            isMyTurn = true; // 白方先走
+            myColor = PieceColor.WHITE; // Host plays as white
+            isMyTurn = true; // White goes first
             myPlayerId = "HOST_" + System.currentTimeMillis();
             
             // 等待连接建立
@@ -75,12 +75,12 @@ public class MultiplayerSession {
     }
     
     /**
-     * 作为客户端加入游戏
+     * join a game
      */
     public boolean joinGame(String hostAddress, int port) {
         if (network.connectToHost(hostAddress, port)) {
-            myColor = PieceColor.BLACK; // 客户端为黑方
-            isMyTurn = false; // 等待白方先走
+            myColor = PieceColor.BLACK; // Client plays as black
+            isMyTurn = false; // Wait for white to move first
             myPlayerId = "CLIENT_" + System.currentTimeMillis();
             
             startGame();
@@ -91,7 +91,7 @@ public class MultiplayerSession {
     }
     
     /**
-     * 开始游戏
+     * Start the game
      */
     private void startGame() {
         gameSession.start();
@@ -104,7 +104,7 @@ public class MultiplayerSession {
     }
     
     /**
-     * 执行移动
+     * Execute a move
      */
     public boolean makeMove(int startRow, int startCol, int endRow, int endCol) {
         if (!network.isConnected()) {
@@ -116,19 +116,19 @@ public class MultiplayerSession {
             notifyGameStateChanged("Not your turn!");
             return false;
         }
-        
-        // 执行本地移动
+
+        // Execute local move
         boolean success = gameSession.playMove(startRow, startCol, endRow, endCol);
         if (success) {
-            // 发送移动给对手
+            // Send move to opponent
             network.sendMove(startRow, startCol, endRow, endCol);
             isMyTurn = false;
             waitingForOpponent = true;
             
             notifyGameStateChanged("Move sent to opponent, waiting for their move...");
             notifyTurnChanged(false);
-            
-            // 检查游戏结束状态
+
+            // Check game over status
             if (gameSession.isGameOver()) {
                 String result = myColor == PieceColor.WHITE ? "White wins!" : "Black wins!";
                 notifyGameStateChanged("Game Over - " + result);
@@ -141,7 +141,7 @@ public class MultiplayerSession {
     }
     
     /**
-     * 处理网络消息
+     * Handle network messages
      */
     private void handleNetworkMessage(NetworkMessage message) {
         switch (message.getType()) {
@@ -180,7 +180,7 @@ public class MultiplayerSession {
     }
     
     /**
-     * 处理对手移动
+     * Handle opponent move
      */
     private void handleOpponentMove(GameMove move) {
         if (isMyTurn) {
@@ -193,7 +193,7 @@ public class MultiplayerSession {
             return;
         }
         
-        // 执行对手移动
+        // execute opponent move
         boolean success = gameSession.playMove(move.getStartRow(), move.getStartCol(), 
                                              move.getEndRow(), move.getEndCol());
         if (success) {
@@ -203,12 +203,12 @@ public class MultiplayerSession {
             notifyGameStateChanged("Opponent moved: " + move.getNotation() + " - Your turn!");
             notifyTurnChanged(true);
             
-            // 通知GUI对手移动
+            // Notify GUI of opponent move
             if (callback != null) {
                 callback.onOpponentMove(move);
             }
-            
-            // 检查游戏结束状态
+
+            // Check game over status
             if (gameSession.isGameOver()) {
                 String result = myColor == PieceColor.BLACK ? "Black wins!" : "White wins!";
                 notifyGameStateChanged("Game Over - " + result);
@@ -219,14 +219,14 @@ public class MultiplayerSession {
     }
     
     /**
-     * 发送聊天消息
+     * Send chat message
      */
     public boolean sendChat(String message) {
         return network.sendChat(message);
     }
     
     /**
-     * 断开连接
+     * Disconnect
      */
     public void disconnect() {
         if (network != null) {
@@ -234,8 +234,8 @@ public class MultiplayerSession {
         }
         notifyConnectionChanged(false);
     }
-    
-    // 通知回调方法
+
+    // Notify callback methods
     private void notifyGameStateChanged(String state) {
         if (callback != null) {
             callback.onGameStateChanged(state);

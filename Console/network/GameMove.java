@@ -48,7 +48,7 @@ public class GameMove implements Serializable {
     public void setPlayerId(String playerId) { this.playerId = playerId; }
     
     /**
-     * 获取移动的代数记法 (如 "e2-e4")
+     * acquire the algebraic notation of the move (e.g., "e2-e4")
      */
     public String getNotation() {
         char startFile = (char)('a' + startCol);
@@ -59,7 +59,8 @@ public class GameMove implements Serializable {
     }
     
     /**
-     * 验证移动坐标是否有效
+     * validate the move coordinates
+     * duplicate check
      */
     public boolean isValid() {
         return startRow >= 0 && startRow < 8 && 
