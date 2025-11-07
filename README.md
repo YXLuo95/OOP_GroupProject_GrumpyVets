@@ -1,10 +1,12 @@
-# OOP_GroupProject_GrumpyVets - Chess Game
+# OOP_GroupProject_GrumpyVets - Enhanced Chess Game
 
-A Java Swing-based chess game project featuring complete game logic and graphical user interface.
+A feature-rich Java Swing chess game with dual interaction methods, professional game over system, and multiplayer capabilities.
 
 ## Project Description
 
-This project has evolved from a simple console-based chess application to a full-featured GUI chess game. It demonstrates object-oriented design principles and includes both command-line and graphical interfaces for playing chess.
+This project has evolved from a simple console-based chess application to a sophisticated GUI chess game with modern user interaction features. It demonstrates advanced object-oriented design principles and includes both command-line and enhanced graphical interfaces. 
+
+**Latest Version Features**: Dual input methods (click-to-move + drag-and-drop), professional game over notifications, visual feedback system, and multiplayer framework with networking capabilities.
 
 ## Project Structure
 
@@ -37,8 +39,9 @@ OOP_GroupProject_GrumpyVets/
 │   │   └── PromotionChoice.java # Pawn promotion options
 │   └── MainConsole.java # Console application entry point
 ├── GUI/                 # Graphical user interface layer
-│   ├── MainMenuApp.java    # Main menu and application entry
-│   └── Singleplayer.java   # Single player game interface
+│   ├── MainMenuApp.java       # Main menu and application entry
+│   ├── Singleplayer.java      # Single player game interface
+│   └── MultiplayerFrame.java  # Multiplayer game interface with networking
 └── saves/               # Game save files directory (auto-created)
     └── *.chess          # Saved game files
 ```
@@ -89,12 +92,15 @@ java -cp ".;Console;GUI" MainMenuApp
 - **Save System**: Serializable game state for persistence
 
 ### Graphical User Interface (GUI Package)
-- **Interactive Board**: Click-to-move interface with visual feedback
+- **Dual Interaction Methods**: Both click-to-move and drag-and-drop piece movement
+- **Visual Feedback System**: Real-time highlights, selection indicators, and drag previews
 - **Unicode Pieces**: Clear piece representation using chess symbols
+- **Game Over Notifications**: Professional popup dialogs declaring winners with options
 - **Real-time Updates**: Instant board updates and status information
 - **Intuitive Controls**: Easy-to-use toolbar with game management buttons
 - **Modern Design**: Clean, centered board layout with minimal interface
 - **Window Management**: Proper window switching between menu and game
+- **Multiplayer Interface**: Network game support with chat functionality
 
 ### Save & Load System
 - **Game Persistence**: Save current game state at any time during play
@@ -108,6 +114,23 @@ java -cp ".;Console;GUI" MainMenuApp
 - **Debug Console**: Real-time display of move validation and game events
 - **Error Handling**: Graceful handling of invalid moves and game states
 - **Performance**: Efficient rendering and responsive user interaction
+
+## Enhanced User Experience
+
+### Interactive Features
+- **Dual Control Methods**: Choose between traditional click-to-move or modern drag-and-drop
+- **Visual Feedback**: 
+  - Selected pieces highlighted in yellow
+  - Semi-transparent pieces during drag operations
+  - Real-time cursor tracking with smooth movement
+- **Professional Game Over**: 
+  - Instant popup notifications for checkmate/stalemate
+  - Winner announcements with clear action options
+  - Seamless game continuation without application restart
+- **Status Awareness**:
+  - Real-time turn indicators
+  - Check warnings with clear messaging
+  - Move validation with helpful error messages
 
 ## How to Play
 
@@ -125,15 +148,26 @@ java -cp ".;Console;GUI" MainMenuApp
 - **Toolbar**: Game control buttons at the top
 
 ### Game Controls
-1. **Making Moves**:
+1. **Making Moves** (Two Methods Available):
+   
+   **Method 1 - Click and Move**:
    - **First Click**: Select a piece (highlights in yellow)
    - **Second Click**: Choose destination square
    - **Deselect**: Click the same piece again to cancel selection
+   
+   **Method 2 - Drag and Drop**:
+   - **Press and Hold**: Click and hold on any piece
+   - **Drag**: Move mouse to desired destination (semi-transparent piece follows cursor)
+   - **Release**: Drop the piece on target square to complete move
+   - **Visual Feedback**: Real-time highlighting of valid drop zones
 
-2. **Game Rules**:
+2. **Game Rules & Status**:
    - Only legal moves are allowed (enforced by Console game engine)
    - Proper turn alternation (White moves first)
    - All standard chess rules apply (check, checkmate, castling, en passant)
+   - **Check Warnings**: Clear status indicators when king is in check
+   - **Game Over Detection**: Automatic checkmate and stalemate recognition
+   - **Winner Declaration**: Professional popup dialogs announcing game results
 
 3. **In-Game Controls**:
    - **Back to Menu**: Return to main menu
@@ -149,13 +183,44 @@ java -cp ".;Console;GUI" MainMenuApp
    - **Continue Saved Games**: Loaded games maintain full functionality including save/undo/redo
 
 ### Menu Navigation
-- **Single Player**: Start a new chess game
+- **Single Player**: Start a new chess game with AI or practice mode
 - **Saved Game**: Browse and load previously saved games  
-- **Multiplayer**: (Future feature - currently shows placeholder)
+- **Multiplayer**: Network chess with host/join capabilities and chat system (Some features are working, some are not)
+
+### Game Over Experience
+When a game ends (checkmate, stalemate), players receive:
+- **Instant Notification**: Professional popup dialog declaring the result
+- **Winner Declaration**: Clear announcement of "Checkmate! [Color] wins!" or "Stalemate - Draw!"
+- **Action Options**: Choose to start a new game, return to menu, or exit
+- **Seamless Continuation**: No need to restart the application after games end
 
 ### Debug Information
 - Console window displays move validation and game logic details
 - Useful for understanding why certain moves are/aren't allowed
+
+## Feature Showcase
+
+### 🎮 **Dual Interaction System**
+Try both control methods in the same game:
+1. **Click Method**: Click piece → Click destination
+2. **Drag Method**: Hold piece → Drag → Release
+
+### 🏆 **Professional Game Over Experience**
+When checkmate occurs:
+- Instant popup: "Checkmate! White wins!" or "Checkmate! Black wins!"
+- Choose: New Game | Back to Menu | Exit
+- No application restart needed
+
+### 🎯 **Visual Feedback System**
+- **Selection Highlighting**: Yellow borders around selected pieces
+- **Drag Preview**: Semi-transparent pieces follow your cursor
+- **Status Updates**: Real-time turn and check notifications
+- **Error Guidance**: Clear messages for invalid moves
+
+### 🌐 **Multiplayer Ready**
+- Network game interface with host/join options
+- Built-in chat system for player communication
+- Same enhanced controls in multiplayer mode
 
 ## Technical Features
 
@@ -193,20 +258,26 @@ java -cp ".;Console;GUI" MainMenuApp
 
 ✅ **Completed Features:**
 - Complete chess rule implementation with all standard moves
-- Functional GUI with intuitive click-to-move interface
-- Move validation and game state management
+- **Dual Input System**: Both click-to-move and drag-and-drop interfaces
+- **Enhanced Visual Feedback**: Real-time piece highlighting and drag previews
+- **Game Over System**: Professional popup dialogs with winner declarations
+- Move validation and game state management with check/checkmate detection
 - Undo/redo functionality with complete move history
 - Save/load game system with persistent storage
+- **Multiplayer Interface**: Network game framework with chat system
 - Clean, professional user interface with centered board layout
-- Main menu with game selection and save management
+- Main menu with comprehensive game selection and save management
+- **Seamless Game Flow**: No restarts needed between games
 
 🚧 **Planned Enhancements:**
-- Network multiplayer support
+- Complete network multiplayer implementation (framework ready)
 - AI opponent with difficulty levels
 - Enhanced graphics and animations
 - Chess notation display and export (PGN format)
 - Game statistics and move analysis
 - Tournament mode and time controls
+- Sound effects for moves and game events
+- Customizable themes and piece sets
 
 ## Troubleshooting
 
