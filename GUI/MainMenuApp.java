@@ -1,4 +1,6 @@
 
+package GUI;
+
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -45,7 +47,7 @@ class MainMenuFrame extends JFrame {
         center.add(subtitle("Main Menu"), pos(gbc, row++));
         styleBlack(btnSingle); styleBlack(btnMulti); styleBlack(btnSaved);
         btnSingle.addActionListener(e -> openSinglePlayer());
-        btnMulti.addActionListener(e -> placeholder("Multiplayer"));
+        btnMulti.addActionListener(e -> openMultiplayer());
         btnSaved.addActionListener(e -> openSavedGame());
         center.add(btnSingle, pos(gbc, row++));
         center.add(btnMulti,  pos(gbc, row++));
@@ -84,6 +86,33 @@ class MainMenuFrame extends JFrame {
                     setVisible(true);
                 }
             });
+        });
+    }
+
+    private void openMultiplayer() {
+        // Hide main menu and open multiplayer window
+        setVisible(false);
+        
+        SwingUtilities.invokeLater(() -> {
+            try {
+                MultiplayerFrame multiplayerFrame = new MultiplayerFrame();
+                multiplayerFrame.setVisible(true);
+                
+                // When multiplayer window closes, show main menu again
+                multiplayerFrame.addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosed(WindowEvent e) {
+                        setVisible(true);
+                    }
+                });
+            } catch (Exception ex) {
+                // If MultiplayerFrame fails to load, show error and return to menu
+                JOptionPane.showMessageDialog(this, 
+                    "Failed to open multiplayer window: " + ex.getMessage(), 
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
+                setVisible(true);
+            }
         });
     }
 
@@ -172,13 +201,6 @@ class MainMenuFrame extends JFrame {
                 "System Error", 
                 JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    private void placeholder(String where) {
-        JOptionPane.showMessageDialog(this,
-                "TODO: navigate to " + where,
-                "Not Implemented",
-                JOptionPane.INFORMATION_MESSAGE);
     }
 
     private JLabel title(String t) {

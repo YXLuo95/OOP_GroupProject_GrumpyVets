@@ -1,3 +1,5 @@
+package GUI;
+
 import logic.GameSession;
 import logic.Board;
 import logic.GameSave;
@@ -5,104 +7,127 @@ import objects.*;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-/*
- * Minimal Single Player Chess GUI (Swing) integrating with Console logic.  
- * - A window with a chess board, toolbar (New Game, Undo, Redo, Back to Menu), and status label
- * - Uses Console logic (GameSession, Board, Piece) for game rules and state management
- * - Render 8x8 chess board, pieces, selection, and move handling
- * - GUI responds to user clicks to select/move pieces, updates status label
+
+/**
+ * Single Player Chess Game GUI
+ * 
+ * Purpose: Provides a complete single-player chess experience with enhanced user interaction
+ * Features:
+ * - Interactive chess board with drag-and-drop and click-to-move functionality
+ * - Game control toolbar (New Game, Undo, Redo, Save, Back to Menu)
+ * - Real-time status updates and move validation
+ * - Integration with console chess logic for rule enforcement
+ * - Enhanced visual feedback including piece selection and drag highlighting
+ * - Responsive GUI that updates based on game state changes
  */
 public class Singleplayer extends JFrame {
-    // Inner chess board class
-    private ChessBoard chessBoard;
-    private GameSession gameSession;
-    private JLabel statusLabel;
     
-    // Constructor
+    // Core Game Components
+    // Purpose: Manage chess game logic and visual representation
+    private ChessBoard chessBoard;    // Custom interactive chess board component
+    private GameSession gameSession;  // Chess game logic controller and state manager
+    private JLabel statusLabel;       // Display area for game status and move information
+    
+    /**
+     * Constructor - Initializes Single Player Chess Window
+     * Purpose: Sets up the complete single-player chess gaming interface
+     */
     public Singleplayer() {
         super("Chess - Single Player");
-        initializeGame();
-        setupUI();
+        initializeGame();  // Set up chess game logic
+        setupUI();         // Configure user interface components
     }
     
-    // Initialize game session and board
+    /**
+     * Game Initialization Method
+     * Purpose: Creates and configures the chess game session with a standard board setup
+     */
     private void initializeGame() {
-        // Create chess board and game session
-        Board board = new Board();
-        gameSession = new GameSession(board);
-        gameSession.start(); // Start new game
+        Board board = new Board();         // Create new chess board with standard piece layout
+        gameSession = new GameSession(board); // Initialize game logic controller
+        gameSession.start();              // Start new game with white to move
     }
     
-    // Setup GUI components
+    /**
+     * User Interface Setup Method  
+     * Purpose: Configures and arranges all GUI components in the window layout
+     */
     private void setupUI() {
-        // Window close operation
+        // Window Configuration
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
         
-        // Top toolbar
+        // Top Section - Game Control Toolbar
+        // Purpose: Provides quick access to game functions and navigation
         JToolBar toolbar = createToolbar();
         add(toolbar, BorderLayout.NORTH);
         
-        // Center chess board with proper centering
+        // Center Section - Interactive Chess Board
+        // Purpose: Main game area with enhanced piece interaction capabilities
         chessBoard = new ChessBoard();
-        JPanel centerPanel = new JPanel(new GridBagLayout());
+        JPanel centerPanel = new JPanel(new GridBagLayout()); // Centers the board
         centerPanel.add(chessBoard);
         add(centerPanel, BorderLayout.CENTER);
         
-        // Status label at bottom
+        // Bottom Section - Game Status Display
+        // Purpose: Shows current player turn, game state, and move feedback
         statusLabel = new JLabel("White to move", SwingConstants.CENTER);
         statusLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         statusLabel.setFont(new Font("Arial", Font.BOLD, 14));
         add(statusLabel, BorderLayout.SOUTH);
         
-        // Set window properties - optimized for centered chess board
-        setSize(700, 750); // Reduced width since no side panel
-        setLocationRelativeTo(null);
-        setResizable(false);
+        // Window Properties Configuration
+        setSize(700, 750);        // Optimized dimensions for centered chess board
+        setLocationRelativeTo(null); // Center window on screen
+        setResizable(false);      // Fixed size for consistent layout
         
-        // Initial status update
+        // Initialize game status display
         updateStatus();
     }
     
+    /**
+     * Toolbar Creation Method
+     * Purpose: Creates and configures the game control toolbar with all functional buttons
+     */
     private JToolBar createToolbar() {
         JToolBar toolbar = new JToolBar();
-        toolbar.setFloatable(false);
+        toolbar.setFloatable(false); // Prevent toolbar from being moved
         
-        // Back button
+        // Navigation Button - Return to Main Menu
         JButton backButton = new JButton("Back to Menu");
-        backButton.addActionListener(e -> dispose());
+        backButton.addActionListener(e -> dispose()); // Close single player window
         toolbar.add(backButton);
         
         toolbar.addSeparator();
         
-        // New game button
+        // Game Control Button - Start New Game
         JButton newGameButton = new JButton("New Game");
         newGameButton.addActionListener(e -> {
-            gameSession.start();
-            chessBoard.resetSelection();
-            updateStatus();
-            chessBoard.repaint();
+            gameSession.start();           // Reset game to initial state
+            chessBoard.resetSelection();   // Clear any selected pieces
+            updateStatus();               // Refresh status display
+            chessBoard.repaint();         // Redraw the board
         });
         toolbar.add(newGameButton);
         
         toolbar.addSeparator();
         
-        // Undo button
+        // Move History Button - Undo Last Move
         JButton undoButton = new JButton("Undo");
         undoButton.addActionListener(e -> {
-            if (gameSession.undo()) {
-                chessBoard.resetSelection();
-                updateStatus();
-                chessBoard.repaint();
+            if (gameSession.undo()) {      // Attempt to undo last move
+                chessBoard.resetSelection(); // Clear selection after undo
+                updateStatus();             // Update game status
+                chessBoard.repaint();       // Refresh board display
             }
         });
         toolbar.add(undoButton);
         
-        // Redo button
+        // Move History Button - Redo Previously Undone Move  
         JButton redoButton = new JButton("Redo");
         redoButton.addActionListener(e -> {
-            if (gameSession.redo()) {
-                chessBoard.resetSelection();
+            if (gameSession.redo()) {      // Attempt to redo move
+                chessBoard.resetSelection(); // Clear selection after redo
                 updateStatus();
                 chessBoard.repaint();
             }
@@ -153,20 +178,45 @@ public class Singleplayer extends JFrame {
         }
     }
 
-    // Inner chess board class
+    /**
+     * Interactive Chess Board Inner Class
+     * 
+     * Purpose: Provides enhanced chess board interaction with dual input methods
+     * Features:
+     * - Click-and-move: Traditional chess interface (click piece, click destination)
+     * - Drag-and-drop: Modern interface (drag piece to destination)
+     * - Real-time visual feedback during piece manipulation
+     * - Integration with chess game logic for move validation
+     * - Responsive highlighting and smooth user experience
+     */
     private class ChessBoard extends JPanel {
-        private final int BOARD_SIZE = 8;
-        private final int CELL_SIZE = 75; // Optimized size for centered layout
-        private int selectedRow = -1;
-        private int selectedCol = -1;
+        // Board Display Constants
+        private final int BOARD_SIZE = 8;     // 8x8 chess board
+        private final int CELL_SIZE = 75;     // Optimized square size for centered layout
         
-        // Constructor
+        // Click-and-Move State Variables
+        // Purpose: Track piece selection for traditional click interface
+        private int selectedRow = -1;         // Currently selected piece row (-1 = none)
+        private int selectedCol = -1;         // Currently selected piece column (-1 = none)
+        
+        // Drag-and-Drop State Variables
+        // Purpose: Track piece dragging operations for modern interface
+        private boolean isDragging = false;           // Flag indicating active drag operation
+        private int dragStartRow = -1;               // Starting row of dragged piece (-1 = none)
+        private int dragStartCol = -1;               // Starting column of dragged piece (-1 = none)
+        private Point dragOffset = new Point();      // Mouse offset from piece center for smooth dragging
+        private Point currentDragPosition = new Point(); // Current mouse position during drag operation
+        
+        /**
+         * ChessBoard Constructor
+         * Purpose: Initializes the interactive chess board with enhanced mouse handling
+         */
         public ChessBoard() {
             setPreferredSize(new Dimension(BOARD_SIZE * CELL_SIZE, BOARD_SIZE * CELL_SIZE));
             setBackground(Color.WHITE);
             
-            // Mouse listener for clicks
-            addMouseListener(new MouseAdapter() {
+            // Mouse listener for clicks and drag operations
+            MouseAdapter mouseHandler = new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     int col = e.getX() / CELL_SIZE;
@@ -176,7 +226,76 @@ public class Singleplayer extends JFrame {
                         handleCellClick(row, col);
                     }
                 }
-            });
+                
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    int col = e.getX() / CELL_SIZE;
+                    int row = e.getY() / CELL_SIZE;
+                    
+                    if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE) {
+                        Piece piece = gameSession.getBoard().getPieceAt(row, col);
+                        if (piece != null && piece.getColor() == gameSession.getCurrentTurn()) {
+                            // Start dragging
+                            isDragging = true;
+                            dragStartRow = row;
+                            dragStartCol = col;
+                            
+                            // Calculate offset from piece center
+                            int pieceX = col * CELL_SIZE + CELL_SIZE / 2;
+                            int pieceY = row * CELL_SIZE + CELL_SIZE / 2;
+                            dragOffset.x = e.getX() - pieceX;
+                            dragOffset.y = e.getY() - pieceY;
+                            
+                            currentDragPosition.x = e.getX();
+                            currentDragPosition.y = e.getY();
+                            
+                            // Also select the piece for visual feedback
+                            selectedRow = row;
+                            selectedCol = col;
+                            repaint();
+                        }
+                    }
+                }
+                
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    if (isDragging) {
+                        int col = e.getX() / CELL_SIZE;
+                        int row = e.getY() / CELL_SIZE;
+                        
+                        // Attempt to drop the piece
+                        if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE) {
+                            if (row != dragStartRow || col != dragStartCol) {
+                                // Try to move the piece
+                                boolean moved = gameSession.playMove(dragStartRow, dragStartCol, row, col);
+                                if (moved) {
+                                    updateStatus();
+                                }
+                            }
+                        }
+                        
+                        // Reset drag state
+                        isDragging = false;
+                        dragStartRow = -1;
+                        dragStartCol = -1;
+                        selectedRow = -1;
+                        selectedCol = -1;
+                        repaint();
+                    }
+                }
+                
+                @Override
+                public void mouseDragged(MouseEvent e) {
+                    if (isDragging) {
+                        currentDragPosition.x = e.getX();
+                        currentDragPosition.y = e.getY();
+                        repaint();
+                    }
+                }
+            };
+            
+            addMouseListener(mouseHandler);
+            addMouseMotionListener(mouseHandler);
         }
         
         // Handle cell click for selecting/moving pieces
@@ -241,13 +360,29 @@ public class Singleplayer extends JFrame {
                         cellColor = new Color(181, 136, 99);  // Dark cells
                     }
                     
-                    // Highlight selected cell
-                    if (row == selectedRow && col == selectedCol) {
+                    // Highlight selected cell (for click-and-move)
+                    if (row == selectedRow && col == selectedCol && !isDragging) {
                         cellColor = new Color(255, 255, 0, 128); // Yellow highlight
                     }
                     
                     g2d.setColor(cellColor);
                     g2d.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    
+                    // Show drop target during drag operation
+                    if (isDragging) {
+                        Point mousePos = getMousePosition();
+                        if (mousePos != null) {
+                            int hoverCol = mousePos.x / CELL_SIZE;
+                            int hoverRow = mousePos.y / CELL_SIZE;
+                            if (hoverRow == row && hoverCol == col && 
+                                hoverRow >= 0 && hoverRow < BOARD_SIZE && 
+                                hoverCol >= 0 && hoverCol < BOARD_SIZE) {
+                                // Highlight potential drop target
+                                g2d.setColor(new Color(0, 255, 0, 100)); // Green highlight
+                                g2d.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                            }
+                        }
+                    }
                     
                     // Draw cell borders
                     g2d.setColor(Color.BLACK);
@@ -268,8 +403,20 @@ public class Singleplayer extends JFrame {
                 for (int col = 0; col < BOARD_SIZE; col++) {
                     Piece piece = gameSession.getBoard().getPieceAt(row, col);
                     if (piece != null) {
+                        // Don't draw the piece at its original position if it's being dragged
+                        if (isDragging && row == dragStartRow && col == dragStartCol) {
+                            continue; // Skip drawing this piece as it's being dragged
+                        }
                         drawPiece(g2d, piece, row, col);
                     }
+                }
+            }
+            
+            // Draw the dragged piece at current cursor position
+            if (isDragging && dragStartRow >= 0 && dragStartCol >= 0) {
+                Piece draggedPiece = gameSession.getBoard().getPieceAt(dragStartRow, dragStartCol);
+                if (draggedPiece != null) {
+                    drawDraggedPiece(g2d, draggedPiece, currentDragPosition);
                 }
             }
         }
@@ -300,6 +447,39 @@ public class Singleplayer extends JFrame {
             }
             
             // Draw piece
+            g2d.setColor(pieceColor);
+            g2d.drawString(symbol, x, y);
+        }
+        
+        // Draw a piece being dragged at the cursor position
+        private void drawDraggedPiece(Graphics2D g2d, Piece piece, Point position) {
+            String symbol = getPieceSymbol(piece);
+            
+            // Set color with slight transparency to show it's being dragged
+            Color pieceColor = (piece.getColor() == PieceColor.WHITE) ? 
+                new Color(255, 255, 255, 200) : new Color(0, 0, 0, 200);
+            Color outlineColor = (piece.getColor() == PieceColor.WHITE) ? 
+                new Color(0, 0, 0, 200) : new Color(255, 255, 255, 200);
+            
+            FontMetrics fm = g2d.getFontMetrics();
+            int textWidth = fm.stringWidth(symbol);
+            int textHeight = fm.getAscent();
+            
+            // Center the piece on cursor position, accounting for drag offset
+            int x = position.x - dragOffset.x - textWidth / 2;
+            int y = position.y - dragOffset.y + textHeight / 2;
+            
+            // Draw outline for better visibility
+            g2d.setColor(outlineColor);
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    if (dx != 0 || dy != 0) {
+                        g2d.drawString(symbol, x + dx, y + dy);
+                    }
+                }
+            }
+            
+            // Draw the dragged piece
             g2d.setColor(pieceColor);
             g2d.drawString(symbol, x, y);
         }
