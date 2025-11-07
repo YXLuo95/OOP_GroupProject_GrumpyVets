@@ -81,7 +81,8 @@ public class GameSession {
         PieceColor opp = (currentTurn == PieceColor.WHITE) ? PieceColor.BLACK : PieceColor.WHITE;
 
         if (Rules.isCheckmate(board, opp)) {
-            System.out.println("Checkmate! " + opp + " loses.");
+            PieceColor winner = currentTurn;
+            System.out.println("Checkmate! " + winner + " wins!");
             gameOver = true;
         } else if (Rules.isStalemate(board, opp)) {
             System.out.println("Stalemate!");
@@ -90,8 +91,11 @@ public class GameSession {
             System.out.println(opp + " is in check.");
         }
 
-        // Flip the turn
-        currentTurn = opp;
+        // Flip the turn only if game is not over
+        if (!gameOver) {
+            currentTurn = opp;
+        }
+        
         return true;
     }
 

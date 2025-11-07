@@ -3,6 +3,7 @@ package GUI;
 import logic.GameSession;
 import logic.Board;
 import logic.GameSave;
+import logic.Rules;
 import objects.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -151,10 +152,76 @@ public class Singleplayer extends JFrame {
         
         // Check for game over
         if (gameSession.isGameOver()) {
-            statusLabel.setText("Game Over");
+            // Check what type of game ending it is
+            PieceColor currentPlayer = gameSession.getCurrentTurn();
+            PieceColor opponent = (currentPlayer == PieceColor.WHITE) ? PieceColor.BLACK : PieceColor.WHITE;
+            
+            if (Rules.isCheckmate(gameSession.getBoard(), currentPlayer)) {
+                String winner = (opponent == PieceColor.WHITE) ? "White" : "Black";
+                statusLabel.setText("Checkmate! " + winner + " wins!");
+                showGameOverDialog("Checkmate!", winner + " wins!");
+            } else if (Rules.isStalemate(gameSession.getBoard(), currentPlayer)) {
+                statusLabel.setText("Stalemate - Draw!");
+                showGameOverDialog("Stalemate!", "It's a draw!");
+            } else {
+                statusLabel.setText("Game Over");
+                showGameOverDialog("Game Over", "Game has ended.");
+            }
+        } else if (Rules.isInCheck(gameSession.getBoard(), gameSession.getCurrentTurn())) {
+            statusLabel.setText(turnText + " in check - move to safety!");
         } else {
             statusLabel.setText(turnText + " to move");
         }
+    }
+    
+    /**
+     * Shows a popup dialog to declare the winner or game result
+     */
+    private void showGameOverDialog(String title, String message) {
+        // Use SwingUtilities.invokeLater to ensure the dialog shows on the EDT
+        SwingUtilities.invokeLater(() -> {
+            Object[] options = {"New Game", "Back to Menu", "Exit"};
+            int choice = JOptionPane.showOptionDialog(
+                this,
+                message + "\n\nWhat would you like to do?",
+                title,
+                JOptionPane.YES_NO_CANCEL_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                null,
+                options,
+                options[0]
+            );
+            
+            switch (choice) {
+                case 0: // New Game
+                    startNewGame();
+                    break;
+                case 1: // Back to Menu
+                    backToMainMenu();
+                    break;
+                case 2: // Exit
+                case JOptionPane.CLOSED_OPTION:
+                    System.exit(0);
+                    break;
+            }
+        });
+    }
+    
+    /**
+     * Start a new game
+     */
+    private void startNewGame() {
+        gameSession.start();           // Reset game to initial state
+        chessBoard.resetSelection();   // Clear any selected pieces
+        updateStatus();               // Refresh status display
+        chessBoard.repaint();         // Redraw the board
+    }
+    
+    /**
+     * Return to main menu
+     */
+    private void backToMainMenu() {
+        dispose(); // Close single player window
     }
     
     private void saveGame() {
@@ -229,6 +296,11 @@ public class Singleplayer extends JFrame {
                 
                 @Override
                 public void mousePressed(MouseEvent e) {
+                    // Don't allow any interaction if game is over
+                    if (gameSession.isGameOver()) {
+                        return;
+                    }
+                    
                     int col = e.getX() / CELL_SIZE;
                     int row = e.getY() / CELL_SIZE;
                     
@@ -263,8 +335,10 @@ public class Singleplayer extends JFrame {
                         int col = e.getX() / CELL_SIZE;
                         int row = e.getY() / CELL_SIZE;
                         
-                        // Attempt to drop the piece
-                        if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE) {
+                        // Check if game is over before allowing drag move
+                        if (gameSession.isGameOver()) {
+                            // Game is over, don't allow move
+                        } else if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE) {
                             if (row != dragStartRow || col != dragStartCol) {
                                 // Try to move the piece
                                 boolean moved = gameSession.playMove(dragStartRow, dragStartCol, row, col);
