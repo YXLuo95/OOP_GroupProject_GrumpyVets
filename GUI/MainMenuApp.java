@@ -27,7 +27,7 @@ public class MainMenuApp {
 
 class MainMenuFrame extends JFrame {
     private final JButton btnSingle = new JButton("Single Player");
-    private final JButton btnMulti  = new JButton("Multiplayer");
+    private final JButton btnMulti  = new JButton("Multiplayer(P2P Demo)");
     private final JButton btnSaved  = new JButton("Saved Game");
 
     MainMenuFrame() {
