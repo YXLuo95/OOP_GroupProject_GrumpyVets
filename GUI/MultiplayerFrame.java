@@ -370,21 +370,20 @@ public class MultiplayerFrame extends JFrame {
         );
         
         if (option == JOptionPane.YES_OPTION) {
-            // 清理网络连接
+            // cleanup network connection
             disconnect();
             
-            // 关闭当前窗口
+            // Close current window
             dispose();
             
-            // 尝试打开主菜单
+            // Try to open main menu
             SwingUtilities.invokeLater(() -> {
                 try {
-                    Class<?> mainMenuClass = Class.forName("MainMenuApp");
-                    Object mainMenu = mainMenuClass.getDeclaredConstructor().newInstance();
-                    mainMenuClass.getMethod("setVisible", boolean.class).invoke(mainMenu, true);
+                    // Directly create main menu window instance
+                    new MainMenuFrame().setVisible(true);
                 } catch (Exception ex) {
                     System.err.println("Could not open main menu: " + ex.getMessage());
-                    // 如果无法打开主菜单，至少不要让程序挂起
+                    // return something to prevent hang
                 }
             });
         }
