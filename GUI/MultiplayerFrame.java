@@ -1,12 +1,14 @@
 package GUI;
 
-import logic.GameSession;
-import logic.Board;
-import logic.Rules;
-import objects.*;
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import javax.swing.*;
+import logic.Board;
+import logic.GameSession;
+import logic.Rules;
+import network.GameMove;
+import network.MultiplayerSession;
+import objects.*;
 
 /**
  * Multiplayer Chess Game GUI Window
@@ -38,6 +40,9 @@ public class MultiplayerFrame extends JFrame {
     private JTextField chatInput;     // Input field for typing chat messages
     private JButton sendChatButton;   // Button to send chat messages
     private JLabel connectionLabel;   // Shows current connection status
+    
+    // Network Components
+    private MultiplayerSession multiplayerSession;
     
     // Chess Piece Selection State
     // Purpose: Tracks which piece is currently selected for click-and-move interaction
@@ -155,9 +160,9 @@ public class MultiplayerFrame extends JFrame {
         connectionPanel.add(joinButton);
         connectionPanel.add(disconnectButton);
         
-        // 添加回到主菜单按钮
+        // Add back to main menu button
         JButton backToMenuButton = new JButton("Back to Main Menu");
-        backToMenuButton.setBackground(new Color(220, 53, 69)); // 红色背景
+        backToMenuButton.setBackground(new Color(220, 53, 69)); // Red background
         backToMenuButton.setForeground(Color.BLACK);
         backToMenuButton.setFocusPainted(false);
         backToMenuButton.addActionListener(e -> backToMainMenu());
@@ -214,7 +219,23 @@ public class MultiplayerFrame extends JFrame {
             connectionLabel.setText("Waiting for players...");
             addChatMessage("System", "Hosting game on port " + port);
             
-            // TODO: Implement actual network hosting logic
+            // Initialize multiplayer session and start hosting
+            try {
+                multiplayerSession = new MultiplayerSession(gameSession.getBoard(), "Host_" + System.currentTimeMillis());
+                multiplayerSession.setGameStateCallback(createGameStateCallback());
+                boolean success = multiplayerSession.hostGame(port);
+                if (!success) {
+                    throw new RuntimeException("Failed to start hosting");
+                }
+                addChatMessage("System", "Successfully hosting on port " + port);
+            } catch (Exception ex) {
+                addChatMessage("System", "Hosting failed: " + ex.getMessage());
+                // Reset UI on failure
+                hostButton.setEnabled(true);
+                joinButton.setEnabled(true);
+                disconnectButton.setEnabled(false);
+                connectionLabel.setText("Not connected");
+            }
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, "Please enter a valid port number", "Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -238,7 +259,23 @@ public class MultiplayerFrame extends JFrame {
             connectionLabel.setText("Connecting...");
             addChatMessage("System", "Attempting to connect to " + hostIp + ":" + port);
             
-            // TODO: Implement actual network connection logic
+            // Initialize multiplayer session and connect to host
+            try {
+                multiplayerSession = new MultiplayerSession(gameSession.getBoard(), "Client_" + System.currentTimeMillis());
+                multiplayerSession.setGameStateCallback(createGameStateCallback());
+                boolean success = multiplayerSession.joinGame(hostIp, port);
+                if (!success) {
+                    throw new RuntimeException("Failed to connect to host");
+                }
+                addChatMessage("System", "Successfully connected to " + hostIp + ":" + port);
+            } catch (Exception ex) {
+                addChatMessage("System", "Connection failed: " + ex.getMessage());
+                // Reset UI on failure
+                hostButton.setEnabled(true);
+                joinButton.setEnabled(true);
+                disconnectButton.setEnabled(false);
+                connectionLabel.setText("Not connected");
+            }
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, "Please enter a valid port number", "Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -251,29 +288,43 @@ public class MultiplayerFrame extends JFrame {
         disconnectButton.setEnabled(false);
         connectionLabel.setText("Not connected");
         addChatMessage("System", "Disconnected from game");
-        // TODO: 实际的断开连接逻辑
+        
+        // Close network connection if exists
+        if (multiplayerSession != null) {
+            multiplayerSession.disconnect();
+            multiplayerSession = null;
+            addChatMessage("System", "Network connection closed");
+        }
     }
     
     private void handleSquareClick(int row, int col) {
         if (gameSession == null) return;
         
         if (selectedRow == -1) {
-            // 选择棋子
+            // Select piece
             Piece piece = gameSession.getBoard().getPieceAt(row, col);
             
             if (piece != null && piece.getColor() == gameSession.getCurrentTurn()) {
                 selectedRow = row;
                 selectedCol = col;
-                chessBoard.repaint(); // 重新绘制以显示选择
+                chessBoard.repaint(); // Repaint to show selection
                 statusLabel.setText("Selected piece at " + (char)('a' + col) + (8 - row) + ". Click destination.");
             }
         } else {
-            // 尝试移动
+            // Attempt to move
             try {
                 boolean success = gameSession.playMove(selectedRow, selectedCol, row, col);
                 if (success) {
                     updateGameStatus();
-                    // TODO: 发送移动到对手
+                    // Send move to opponent if connected
+                    if (multiplayerSession != null && multiplayerSession.isConnected()) {
+                        try {
+                            multiplayerSession.makeMove(selectedRow, selectedCol, row, col);
+                            addChatMessage("System", "Move sent to opponent");
+                        } catch (Exception ex) {
+                            addChatMessage("System", "Failed to send move: " + ex.getMessage());
+                        }
+                    }
                 } else {
                     statusLabel.setText("Invalid move. Try again.");
                 }
@@ -281,7 +332,7 @@ public class MultiplayerFrame extends JFrame {
                 statusLabel.setText("Move failed: " + e.getMessage());
             }
             
-            // 重置选择
+            // Reset selection
             selectedRow = -1;
             selectedCol = -1;
             chessBoard.repaint();
@@ -293,7 +344,14 @@ public class MultiplayerFrame extends JFrame {
         if (!message.isEmpty()) {
             addChatMessage("You", message);
             chatInput.setText("");
-            // TODO: 发送消息到对手
+            // Send message to opponent if connected
+            if (multiplayerSession != null && multiplayerSession.isConnected()) {
+                try {
+                    multiplayerSession.sendChat(message);
+                } catch (Exception ex) {
+                    addChatMessage("System", "Failed to send message: " + ex.getMessage());
+                }
+            }
         }
     }
     
@@ -587,7 +645,7 @@ public class MultiplayerFrame extends JFrame {
                 }
             }
             
-            // 绘制边框
+            // Draw border
             g2d.setColor(Color.BLACK);
             g2d.setStroke(new BasicStroke(2));
             g2d.drawRect(0, 0, BOARD_SIZE, BOARD_SIZE);
@@ -684,7 +742,7 @@ public class MultiplayerFrame extends JFrame {
         }
         
         private void drawSelection(Graphics2D g2d) {
-            g2d.setColor(new Color(255, 255, 0, 100)); // 半透明黄色
+            g2d.setColor(new Color(255, 255, 0, 100)); // Semi-transparent yellow
             g2d.fillRect(selectedCol * CELL_SIZE, selectedRow * CELL_SIZE, CELL_SIZE, CELL_SIZE);
             
             g2d.setColor(Color.YELLOW);
@@ -712,6 +770,65 @@ public class MultiplayerFrame extends JFrame {
                     return "?";
             }
         }
+    }
+    
+    /**
+     * Create callback for handling network events
+     */
+    private MultiplayerSession.GameStateCallback createGameStateCallback() {
+        return new MultiplayerSession.GameStateCallback() {
+            @Override
+            public void onGameStateChanged(String state) {
+                SwingUtilities.invokeLater(() -> {
+                    statusLabel.setText(state);
+                    addChatMessage("System", "Game state: " + state);
+                });
+            }
+            
+            @Override
+            public void onChatReceived(String message) {
+                SwingUtilities.invokeLater(() -> {
+                    addChatMessage("Opponent", message);
+                });
+            }
+            
+            @Override
+            public void onOpponentMove(GameMove move) {
+                SwingUtilities.invokeLater(() -> {
+                    try {
+                        boolean success = gameSession.playMove(move.getStartRow(), move.getStartCol(), 
+                                                             move.getEndRow(), move.getEndCol());
+                        if (success) {
+                            updateGameStatus();
+                            chessBoard.repaint();
+                            addChatMessage("System", "Opponent moved");
+                        }
+                    } catch (Exception e) {
+                        addChatMessage("System", "Error processing opponent move: " + e.getMessage());
+                    }
+                });
+            }
+            
+            @Override
+            public void onConnectionChanged(boolean connected) {
+                SwingUtilities.invokeLater(() -> {
+                    if (connected) {
+                        connectionLabel.setText("Connected");
+                        addChatMessage("System", "Connected to opponent");
+                    } else {
+                        connectionLabel.setText("Disconnected");
+                        addChatMessage("System", "Lost connection");
+                    }
+                });
+            }
+            
+            @Override
+            public void onTurnChanged(boolean myTurn) {
+                SwingUtilities.invokeLater(() -> {
+                    statusLabel.setText(myTurn ? "Your turn" : "Opponent's turn");
+                });
+            }
+        };
     }
     
     // for testing purposes
