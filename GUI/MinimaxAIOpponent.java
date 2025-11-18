@@ -5,9 +5,17 @@ import logic.Rules;
 import objects.*;
 
 /**
- * Minimax/Negamax AI with alpha-beta pruning.
- * - Uses simple material evaluation with in-check penalty.
- * - Depth is configurable via constructor.
+ * A concrete {@link AIOpponent} using Negamax with alpha-beta pruning.
+ *
+ * Characteristics:
+ * - Search: depth-limited negamax; alpha-beta pruning for speedups.
+ * - Evaluation: simple material balance (+ small penalty if the side to move is in check).
+ * - Legality: skips moves that leave own king in check.
+ * - Performance: depth is constructor-configurable; higher depth costs more CPU.
+ *
+ * Notes:
+ * - This AI treats the provided Board as read-only and operates on deep copies for simulation.
+ * - It returns null when no legal move exists (checkmate/stalemate).
  */
 public class MinimaxAIOpponent implements AIOpponent {
     private final int maxDepth;
@@ -16,6 +24,10 @@ public class MinimaxAIOpponent implements AIOpponent {
         this.maxDepth = Math.max(1, depth);
     }
 
+    /**
+     * Choose a move for {@code aiColor} in the given position.
+     * The input board is not mutated.
+     */
     @Override
     public int[] chooseMove(Board board, PieceColor aiColor) {
         int bestScore = Integer.MIN_VALUE;
@@ -78,6 +90,10 @@ public class MinimaxAIOpponent implements AIOpponent {
         return best;
     }
 
+    /**
+     * Simple material-based evaluation from the given perspective.
+     * Higher is better for {@code perspective}.
+     */
     private int evaluate(Board b, PieceColor perspective) {
         int material = 0;
         for (Piece p : b.getPiecesByColor(PieceColor.WHITE)) material += pieceVal(p);
@@ -89,6 +105,9 @@ public class MinimaxAIOpponent implements AIOpponent {
         return score - checkPenalty;
     }
 
+    /**
+     * Basic piece values in centipawns.
+     */
     private int pieceVal(Piece p) {
         return switch (p.getType()) {
             case QUEEN -> 900;

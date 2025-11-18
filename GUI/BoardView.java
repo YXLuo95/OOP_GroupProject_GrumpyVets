@@ -11,14 +11,34 @@ import objects.Piece;
 import objects.PieceColor;
 
 /**
- * Reusable chess board Swing component with click and drag support.
- * It is UI-only and delegates game-state and move execution via suppliers/callbacks.
+ * Reusable Swing component that renders an 8×8 chess board with
+ * both click-to-move and drag-and-drop interactions.
+ *
+ * Responsibilities:
+ * - Visual-only: BoardView does not own game rules or state. It reads from suppliers
+ *   and delegates move attempts to a provided MovePerformer.
+ * - Input handling: Click selection and drag operations, including hover/selection highlights.
+ * - Rendering: Unicode piece symbols, square coloring, and dragged-piece overlay.
+ *
+ * Coordinates:
+ * - 0-based indices with (row=0, col=0) at top-left. Each cell is CELL_SIZE×CELL_SIZE pixels.
+ *
+ * Threading:
+ * - All interactions occur on Swing's EDT. Call repaint/update from EDT.
  */
 public class BoardView extends JPanel {
+    /**
+     * Callback to attempt a move. Should apply game rules and mutate the model if legal.
+     * Return true on success, false otherwise.
+     */
     public interface MovePerformer {
         boolean perform(int sr, int sc, int er, int ec);
     }
 
+    /**
+     * Listener invoked after a move has been successfully performed.
+     * Typical uses: update status, repaint, trigger AI/network actions.
+     */
     public interface MoveListener {
         void onMoveSuccess(int sr, int sc, int er, int ec);
     }
@@ -41,13 +61,21 @@ public class BoardView extends JPanel {
     private final Point dragOffset = new Point();
     private final Point currentDragPosition = new Point();
 
-    public BoardView(
+        /**
+         * Create a BoardView bound to external game-state suppliers and callbacks.
+         * @param boardSupplier        supplies the current Board to render
+         * @param currentTurnSupplier  supplies the side to move (for input gating)
+         * @param isGameOverSupplier   supplies whether the game is over (disables input)
+         * @param movePerformer        validates/applies a move; returns true if executed
+         * @param moveListener         notified on successful moves (optional; may be null)
+         */
+        public BoardView(
             Supplier<Board> boardSupplier,
             Supplier<PieceColor> currentTurnSupplier,
             BooleanSupplier isGameOverSupplier,
-                MovePerformer movePerformer,
-                MoveListener moveListener
-    ) {
+            MovePerformer movePerformer,
+            MoveListener moveListener
+        ) {
         this.boardSupplier = boardSupplier;
         this.currentTurnSupplier = currentTurnSupplier;
         this.isGameOverSupplier = isGameOverSupplier;
@@ -128,6 +156,9 @@ public class BoardView extends JPanel {
         addMouseMotionListener(mouseHandler);
     }
 
+    /**
+     * Clear any selected cell (e.g., after undo/redo/new game) and repaint.
+     */
     public void resetSelection() {
         selectedRow = -1;
         selectedCol = -1;
