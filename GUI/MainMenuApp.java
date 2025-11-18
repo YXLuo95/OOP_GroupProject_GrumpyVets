@@ -1,4 +1,3 @@
-
 package GUI;
 
 import java.awt.*;
@@ -14,8 +13,12 @@ import javax.swing.*;
  * - Multiplayer and Saved Game buttons show a placeholder dialog
  * - Clean, centered layout; ESC quits; Enter triggers focused button
  *
- * Compile: javac MainMenuApp.java
- * Run:     java MainMenuApp
+ * Recommended: run with the project script
+ *   Windows:   run.bat  (choose option 1 for GUI)
+ *
+ * Manual compile/run from project root (PowerShell/CMD):
+ *   Compile: javac -cp ".;Console" GUI\*.java
+ *   Run:     java  -cp ".;Console;." GUI.MainMenuApp
  */
 public class MainMenuApp {
     public static void main(String[] args) {

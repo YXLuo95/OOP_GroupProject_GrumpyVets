@@ -154,31 +154,20 @@ public class Singleplayer extends JFrame {
     }
 
     private void updateStatus() {
-        // Update status label based on current turn and game state
-        PieceColor currentTurn = gameSession.getCurrentTurn();
-        String turnText = (currentTurn == PieceColor.WHITE) ? "White" : "Black";
-        
-        // Check for game over
+        // Set status text via shared helper
+        statusLabel.setText(StatusText.forSession(gameSession));
+        // Preserve existing game over dialogs
         if (gameSession.isGameOver()) {
-            // Check what type of game ending it is
             PieceColor currentPlayer = gameSession.getCurrentTurn();
             PieceColor opponent = (currentPlayer == PieceColor.WHITE) ? PieceColor.BLACK : PieceColor.WHITE;
-            
             if (Rules.isCheckmate(gameSession.getBoard(), currentPlayer)) {
                 String winner = (opponent == PieceColor.WHITE) ? "White" : "Black";
-                statusLabel.setText("Checkmate! " + winner + " wins!");
                 showGameOverDialog("Checkmate!", winner + " wins!");
             } else if (Rules.isStalemate(gameSession.getBoard(), currentPlayer)) {
-                statusLabel.setText("Stalemate - Draw!");
                 showGameOverDialog("Stalemate!", "It's a draw!");
             } else {
-                statusLabel.setText("Game Over");
                 showGameOverDialog("Game Over", "Game has ended.");
             }
-        } else if (Rules.isInCheck(gameSession.getBoard(), gameSession.getCurrentTurn())) {
-            statusLabel.setText(turnText + " in check - move to safety!");
-        } else {
-            statusLabel.setText(turnText + " to move");
         }
     }
     

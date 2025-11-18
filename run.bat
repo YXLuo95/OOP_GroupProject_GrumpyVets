@@ -25,8 +25,8 @@ mkdir "%OUT%" >nul 2>&1
 
 echo.
 echo Compiling project to "%OUT%"...
-echo   - logic, objects, network, GUI
-javac -d "%OUT%" Console\logic\*.java Console\objects\*.java Console\network\*.java GUI\*.java
+echo   - logic, objects, network, GUI, console
+javac -d "%OUT%" Console\logic\*.java Console\objects\*.java Console\network\*.java Console\MainConsole.java GUI\*.java
 if %errorlevel% neq 0 (
     echo.
     echo Build failed. See errors above.
@@ -41,21 +41,28 @@ echo ========================================
 
 echo.
 echo Choose how to run the chess game:
-echo   1. Start Main Menu (Recommended)
-echo   2. Exit
+echo   1. Start Main Menu (GUI)
+echo   2. Run Console Version
+echo   3. Exit
 echo.
-set /p choice="Please enter your choice (1-2): "
+set /p choice="Please enter your choice (1-3): "
 
-if "%choice%"=="2" (
+if "%choice%"=="3" (
     echo Exiting...
     exit /b 0
 )
 
 echo.
-echo Starting Chess Game with Main Menu...
-echo You can choose Single Player, Single Player (AI), or Multiplayer from the menu.
-echo.
-java -cp "%OUT%" GUI.MainMenuApp
+if "%choice%"=="2" (
+    echo Starting Console Chess...
+    echo.
+    java -cp "%OUT%" MainConsole
+) else (
+    echo Starting Chess Game with Main Menu - GUI...
+    echo You can choose Single Player, Single Player AI, or Multiplayer from the menu.
+    echo.
+    java -cp "%OUT%" GUI.MainMenuApp
+)
 
 echo.
 echo Chess Game ended.

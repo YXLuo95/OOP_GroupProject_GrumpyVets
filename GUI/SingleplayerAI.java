@@ -138,28 +138,18 @@ public class SingleplayerAI extends JFrame {
     }
 
     private void updateStatus() {
-        PieceColor currentTurn = gameSession.getCurrentTurn();
-        String turnText = (currentTurn == PieceColor.WHITE) ? "White" : "Black";
-
+        statusLabel.setText(StatusText.forSession(gameSession));
         if (gameSession.isGameOver()) {
             PieceColor currentPlayer = gameSession.getCurrentTurn();
             PieceColor opponent = (currentPlayer == PieceColor.WHITE) ? PieceColor.BLACK : PieceColor.WHITE;
-
             if (Rules.isCheckmate(gameSession.getBoard(), currentPlayer)) {
                 String winner = (opponent == PieceColor.WHITE) ? "White" : "Black";
-                statusLabel.setText("Checkmate! " + winner + " wins!");
                 showGameOverDialog("Checkmate!", winner + " wins!");
             } else if (Rules.isStalemate(gameSession.getBoard(), currentPlayer)) {
-                statusLabel.setText("Stalemate - Draw!");
                 showGameOverDialog("Stalemate!", "It's a draw!");
             } else {
-                statusLabel.setText("Game Over");
                 showGameOverDialog("Game Over", "Game has ended.");
             }
-        } else if (Rules.isInCheck(gameSession.getBoard(), gameSession.getCurrentTurn())) {
-            statusLabel.setText(turnText + " in check - move to safety!");
-        } else {
-            statusLabel.setText(turnText + " to move");
         }
     }
 

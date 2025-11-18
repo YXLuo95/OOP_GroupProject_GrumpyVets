@@ -1,301 +1,203 @@
-# OOP_GroupProject_GrumpyVets - Enhanced Chess Game
+# OOP_GroupProject_GrumpyVets — Chess Game
 
-A feature-rich Java Swing chess game with dual interaction methods, professional game over system, and multiplayer capabilities.
+A feature-rich Java chess application built with a Console engine and a Swing-based GUI. It supports both click-to-move and drag-and-drop, polished game-over dialogs, save/load, and a basic peer-to-peer multiplayer UI with chat.
 
 ## Project Description
 
-This project has evolved from a simple console-based chess application to a sophisticated GUI chess game with modern user interaction features. It demonstrates advanced object-oriented design principles and includes both command-line and enhanced graphical interfaces. 
-
-**Latest Version Features**: Dual input methods (click-to-move + drag-and-drop), professional game over notifications, visual feedback system, and multiplayer framework with networking capabilities.
+The project evolved from a console chess app to a GUI experience while keeping a clean separation: the Console package provides the complete chess engine (rules, validation, history, saves), and the GUI layer focuses on rendering and interaction. Multiplayer UI is available and under gradual improvement.
 
 ## Project Structure
 
 ```
 OOP_GroupProject_GrumpyVets/
 ├── README.md
-├── run.bat              # Automated build and run script
-├── .gitignore           # Git ignore configuration
-├── .vscode/             # VS Code project settings
-├── Console/             # Game logic layer (complete chess engine)
-│   ├── logic/           # Core game logic
-│   │   ├── Board.java          # Chess board representation
-│   │   ├── BoardPrinter.java   # Console board display
-│   │   ├── GameSession.java    # Game state management
-│   │   ├── GameSave.java       # Save/load game functionality
-│   │   ├── Notation.java       # Chess notation handling
-│   │   ├── Rules.java          # Chess rules validation
-│   │   └── TestGameSession.java # Game logic testing
-│   ├── objects/         # Chess piece definitions
-│   │   ├── Piece.java          # Base piece class
-│   │   ├── Pawn.java           # Pawn piece logic
-│   │   ├── King.java           # King piece logic
-│   │   ├── Queen.java          # Queen piece logic
-│   │   ├── Rook.java           # Rook piece logic
-│   │   ├── Bishop.java         # Bishop piece logic
-│   │   ├── Knight.java         # Knight piece logic
-│   │   ├── Moveable.java       # Movement interface
-│   │   ├── PieceColor.java     # Piece color enumeration
-│   │   ├── PieceType.java      # Piece type enumeration
-│   │   └── PromotionChoice.java # Pawn promotion options
-│   └── MainConsole.java # Console application entry point
-├── GUI/                 # Graphical user interface layer
-│   ├── MainMenuApp.java       # Main menu and application entry
-│   ├── Singleplayer.java      # Single player game interface
-│   └── MultiplayerFrame.java  # Multiplayer game interface with networking
-└── saves/               # Game save files directory (auto-created)
-    └── *.chess          # Saved game files
+├── run.bat                      # One-click build and run (GUI or Console)
+├── Console/
+│   ├── MainConsole.java         # Console entry
+│   ├── logic/
+│   │   ├── Board.java
+│   │   ├── BoardPrinter.java
+│   │   ├── GameSave.java
+│   │   ├── GameSession.java
+│   │   ├── Notation.java
+│   │   ├── Rules.java
+│   │   └── TestGameSession.java
+│   ├── network/
+│   │   ├── GameMove.java
+│   │   ├── MultiplayerSession.java
+│   │   ├── NetworkConnection.java
+│   │   └── NetworkMessage.java
+│   └── objects/
+│       ├── Bishop.java
+│       ├── King.java
+│       ├── Knight.java
+│       ├── Moveable.java
+│       ├── Pawn.java
+│       ├── Piece.java
+│       ├── PieceColor.java
+│       ├── PieceType.java
+│       ├── PromotionChoice.java
+│       ├── Queen.java
+│       └── Rook.java
+├── GUI/
+│   ├── AIOpponent.java
+│   ├── BoardView.java
+│   ├── MainMenuApp.java        # GUI entry (package GUI)
+│   ├── MinimaxAIOpponent.java
+│   ├── MultiplayerFrame.java
+│   ├── Singleplayer.java
+│   ├── SingleplayerAI.java
+│   └── StatusText.java
+└── saves/
+    └── test1.chess             # Sample save (folder auto-created)
 ```
 
 ## Quick Start
 
-### Method 1: Using Run Script (Recommended)
-1. **Double-click** the `run.bat` file in the project root directory
-2. The script will automatically:
-   - Compile all Console classes (game logic)
-   - Compile all GUI classes (user interface)
-   - Display compilation status
-3. **Choose option 1** when prompted to run the GUI application
-4. The chess game will launch with a main menu
+### Method 1: Run Script (Recommended)
+1. Double-click `run.bat` in the project root.
+2. The script compiles Console + GUI into `out/` and shows a menu:
+   - 1 Start Main Menu (GUI)
+   - 2 Run Console Version
+   - 3 Exit
+3. Pick 1 for GUI or 2 to play in the terminal.
+4. On Windows, allow Java through the firewall if prompted (for multiplayer).
 
 ### Method 2: PowerShell/Command Prompt
 ```powershell
-# Navigate to project directory
 cd "path\to\OOP_GroupProject_GrumpyVets"
-
-# Run the automated script
 .\run.bat
-
-# Follow the on-screen prompts
 ```
 
 ### Method 3: Manual Compilation (Advanced)
-```batch
-# Compile Console classes
-javac -cp ".;Console" Console\logic\*.java Console\objects\*.java
+#### Windows (PowerShell/CMD)
+```powershell
+# Compile Console classes (logic, objects, network)
+javac -cp ".;Console" Console\logic\*.java Console\objects\*.java Console\network\*.java
 
-# Compile GUI classes
+# Compile GUI classes (package: GUI)
 javac -cp ".;Console" GUI\*.java
 
-# Run GUI application
-java -cp ".;Console;GUI" MainMenuApp
+# Run GUI application (fully qualified main class)
+java -cp ".;Console;." GUI.MainMenuApp
+
+# (Optional) Run console version
+javac -cp ".;Console" Console\MainConsole.java
+java -cp ".;Console;." MainConsole
+```
+
+#### Linux/Mac (bash/zsh)
+```bash
+# Compile Console classes (logic, objects, network)
+javac -cp ".:Console" Console/logic/*.java Console/objects/*.java Console/network/*.java
+
+# Compile GUI classes (package: GUI)
+javac -cp ".:Console" GUI/*.java
+
+# Run GUI application (fully qualified main class)
+java -cp ".:Console:." GUI.MainMenuApp
+
+# (Optional) Run console version
+javac -cp ".:Console" Console/MainConsole.java
+java -cp ".:Console:." MainConsole
 ```
 
 ## Features
 
-### Complete Chess Engine (Console Package)
-- **Full Rule Implementation**: All standard chess rules including special moves
-- **Move Validation**: Prevents illegal moves and self-check situations
-- **Game State Management**: Check, checkmate, and stalemate detection
-- **Move History**: Complete game history with undo/redo functionality
-- **Piece Logic**: Individual piece classes with proper movement rules
-- **Board Representation**: Efficient 8×8 board with position tracking
-- **Save System**: Serializable game state for persistence
+### Console Engine
+- Full chess rules including castling, en passant, and promotion.
+- Strong move validation preventing illegal or self-check moves.
+- Check/checkmate/stalemate detection and complete move history (undo/redo).
+- Serializable saves with restoration of full game state.
 
-### Graphical User Interface (GUI Package)
-- **Dual Interaction Methods**: Both click-to-move and drag-and-drop piece movement
-- **Visual Feedback System**: Real-time highlights, selection indicators, and drag previews
-- **Unicode Pieces**: Clear piece representation using chess symbols
-- **Game Over Notifications**: Professional popup dialogs declaring winners with options
-- **Real-time Updates**: Instant board updates and status information
-- **Intuitive Controls**: Easy-to-use toolbar with game management buttons
-- **Modern Design**: Clean, centered board layout with minimal interface
-- **Window Management**: Proper window switching between menu and game
-- **Multiplayer Interface**: Network game support with chat functionality
-
-### Save & Load System
-- **Game Persistence**: Save current game state at any time during play
-- **Save Management**: Organized save files in dedicated `saves/` directory
-- **Load from Menu**: Select and load saved games directly from main menu
-- **State Restoration**: Complete restoration of board position, turn, and game status
-- **Save Metadata**: Includes save date and custom save names for easy identification
-
-### Integration Features
-- **Seamless Logic Integration**: GUI uses Console engine for all game logic
-- **Debug Console**: Real-time display of move validation and game events
-- **Error Handling**: Graceful handling of invalid moves and game states
-- **Performance**: Efficient rendering and responsive user interaction
-
-## Enhanced User Experience
-
-### Interactive Features
-- **Dual Control Methods**: Choose between traditional click-to-move or modern drag-and-drop
-- **Visual Feedback**: 
-  - Selected pieces highlighted in yellow
-  - Semi-transparent pieces during drag operations
-  - Real-time cursor tracking with smooth movement
-- **Professional Game Over**: 
-  - Instant popup notifications for checkmate/stalemate
-  - Winner announcements with clear action options
-  - Seamless game continuation without application restart
-- **Status Awareness**:
-  - Real-time turn indicators
-  - Check warnings with clear messaging
-  - Move validation with helpful error messages
+### GUI (Swing)
+- Click-to-move and drag-and-drop piece interaction.
+- Real-time visual feedback: selection highlights, drag previews, turn/check status.
+- Unicode piece rendering for clear, cross-platform visuals.
+- Professional game-over dialogs (New Game | Back to Menu | Exit).
+- Toolbar controls: New Game, Undo, Redo, Save, Back to Menu.
+- Multiplayer view with host/join controls and built-in chat (basic sync).
 
 ## How to Play
 
 ### Getting Started
-1. **Launch**: Double-click `run.bat` and select option 1 for GUI application
-2. **Main Menu**: The application opens with a dark-themed main menu
-3. **Start Game**: Click "Single Player" to begin a chess game
+1. Launch via `run.bat` and choose option 1 (GUI).
+2. In the main menu, choose a mode: Single Player, Single Player (AI), Multiplayer, or Saved Game.
 
 ### Game Interface
-- **Chess Board**: 8×8 interactive board with alternating light/dark squares
-- **Chess Pieces**: Unicode symbols for clear piece identification
-  - White pieces: ♔♕♖♗♘♙ (King, Queen, Rook, Bishop, Knight, Pawn)
-  - Black pieces: ♚♛♜♝♞♟ (King, Queen, Rook, Bishop, Knight, Pawn)
-- **Status Bar**: Shows current player turn and game state
-- **Toolbar**: Game control buttons at the top
+- 8×8 board, alternating light/dark squares.
+- Status bar shows current turn and game state.
+- Toolbar provides common actions.
 
-### Game Controls
-1. **Making Moves** (Two Methods Available):
-   
-   **Method 1 - Click and Move**:
-   - **First Click**: Select a piece (highlights in yellow)
-   - **Second Click**: Choose destination square
-   - **Deselect**: Click the same piece again to cancel selection
-   
-   **Method 2 - Drag and Drop**:
-   - **Press and Hold**: Click and hold on any piece
-   - **Drag**: Move mouse to desired destination (semi-transparent piece follows cursor)
-   - **Release**: Drop the piece on target square to complete move
-   - **Visual Feedback**: Real-time highlighting of valid drop zones
-
-2. **Game Rules & Status**:
-   - Only legal moves are allowed (enforced by Console game engine)
-   - Proper turn alternation (White moves first)
-   - All standard chess rules apply (check, checkmate, castling, en passant)
-   - **Check Warnings**: Clear status indicators when king is in check
-   - **Game Over Detection**: Automatic checkmate and stalemate recognition
-   - **Winner Declaration**: Professional popup dialogs announcing game results
-
-3. **In-Game Controls**:
-   - **Back to Menu**: Return to main menu
-   - **New Game**: Reset board and start fresh
-   - **Save Game**: Save current game state with custom name
-   - **Undo**: Take back the last move
-   - **Redo**: Replay an undone move
-
-4. **Save & Load Operations**:
-   - **Save During Play**: Click "Save Game" button and enter a save name
-   - **Load from Menu**: Use "Saved Game" button on main menu
-   - **Save Files**: Automatically stored in `saves/` directory as `.chess` files
-   - **Continue Saved Games**: Loaded games maintain full functionality including save/undo/redo
+### Controls
+1) Click-and-move: click a piece, then click a destination (click again to deselect).
+2) Drag-and-drop: press and hold a piece, drag over a destination, release to drop.
 
 ### Menu Navigation
-- **Single Player**: Start a new chess game with AI or practice mode
-- **Saved Game**: Browse and load previously saved games  
-- **Multiplayer**: Network chess with host/join capabilities and chat system (Some features are working, some are not)
+- Single Player: Start a new local game.
+- Single Player (AI): Choose AI search depth (2/3/4) and AI side (default: Black); play vs AI.
+- Saved Game: Browse and load saved games.
+- Multiplayer (P2P): Host/Join with built-in chat (some features still in progress).
 
-### Game Over Experience
-When a game ends (checkmate, stalemate), players receive:
-- **Instant Notification**: Professional popup dialog declaring the result
-- **Winner Declaration**: Clear announcement of "Checkmate! [Color] wins!" or "Stalemate - Draw!"
-- **Action Options**: Choose to start a new game, return to menu, or exit
-- **Seamless Continuation**: No need to restart the application after games end
+### Multiplayer Quick Guide
+- Host:
+  - Keep IP as `localhost` for same-PC testing.
+  - Use port `8888` (default) or any open port; click "Host Game".
+  - Allow through Windows Firewall if prompted.
+- Join:
+  - On another device or the same PC, enter the host IP and the same port.
+  - Click "Join Game".
+- Notes:
+  - Ensure both devices are on the same network and the port is open.
+  - For same-PC tests, use `localhost` on both sides.
 
-### Debug Information
-- Console window displays move validation and game logic details
-- Useful for understanding why certain moves are/aren't allowed
+## Save & Load
+- Save during play from Single Player via "Save Game".
+- Saves are stored as `.chess` files under `saves/`.
+- Load from the main menu; game state (board, turn, status) is restored.
 
-## Feature Showcase
-
-### 🎮 **Dual Interaction System**
-Try both control methods in the same game:
-1. **Click Method**: Click piece → Click destination
-2. **Drag Method**: Hold piece → Drag → Release
-
-### 🏆 **Professional Game Over Experience**
-When checkmate occurs:
-- Instant popup: "Checkmate! White wins!" or "Checkmate! Black wins!"
-- Choose: New Game | Back to Menu | Exit
-- No application restart needed
-
-### 🎯 **Visual Feedback System**
-- **Selection Highlighting**: Yellow borders around selected pieces
-- **Drag Preview**: Semi-transparent pieces follow your cursor
-- **Status Updates**: Real-time turn and check notifications
-- **Error Guidance**: Clear messages for invalid moves
-
-### 🌐 **Multiplayer Ready**
-- Network game interface with host/join options
-- Built-in chat system for player communication
-- Same enhanced controls in multiplayer mode
-
-## Technical Features
-
-- **Object-Oriented Design**: Comprehensive use of OOP principles
-  - Inheritance: Piece hierarchy with base Piece class
-  - Polymorphism: Different piece movement behaviors
-  - Encapsulation: Protected game state and piece properties
-  - Abstraction: Clear separation between interface and implementation
-
-- **Design Patterns**: 
-  - MVC Architecture: Separation of game logic, presentation, and control
-  - Strategy Pattern: Different piece movement strategies
-  - Observer Pattern: GUI updates based on game state changes
-
-- **Modular Architecture**: 
-  - **Console Package**: Complete, standalone chess engine
-  - **GUI Package**: Pure presentation layer using Console logic
-  - **Save System**: Serialization-based game persistence
-  - **Clean Interfaces**: Well-defined boundaries between components
-
-- **Event-Driven Programming**: Swing-based event handling with mouse interactions
-- **File I/O Operations**: Java serialization for game state persistence
-- **Cross-Platform Compatibility**: Runs on any system with Java 8+
-- **Build Automation**: One-click compilation and execution via run.bat
+## Technical Notes
+- OOP principles across the codebase (piece hierarchy, rule encapsulation).
+- MVC-leaning separation: Console engine (model/rules), GUI (view/controller).
+- Swing event-driven UI; Java serialization for saves.
+- Cross-platform (Java 8+). Scripted build/run via `run.bat` on Windows.
 
 ## System Requirements
-
-- **Java Version**: Java 8 (JDK 1.8) or higher
-- **Operating System**: Windows (run.bat), Linux/Mac (manual compilation)
-- **Memory**: Minimal requirements (< 50MB RAM)
-- **Display**: Any resolution supporting 700×750 window size
-- **Storage**: Minimal space for save files (< 1KB per save)
+- Java 8 (JDK 1.8) or newer.
+- Windows (run via `run.bat`) or Linux/Mac (manual compilation commands above).
+- ~50MB RAM, 700×750 display or larger.
 
 ## Project Status
 
-✅ **Completed Features:**
-- Complete chess rule implementation with all standard moves
-- **Dual Input System**: Both click-to-move and drag-and-drop interfaces
-- **Enhanced Visual Feedback**: Real-time piece highlighting and drag previews
-- **Game Over System**: Professional popup dialogs with winner declarations
-- Move validation and game state management with check/checkmate detection
-- Undo/redo functionality with complete move history
-- Save/load game system with persistent storage
-- **Multiplayer Interface**: Network game framework with chat system
-- Clean, professional user interface with centered board layout
-- Main menu with comprehensive game selection and save management
-- **Seamless Game Flow**: No restarts needed between games
+✔ Completed
+- Full chess logic, validation, and game-over detection.
+- Dual input (click + drag), visual feedback, undo/redo.
+- Save/load with persistent storage.
+- GUI main menu and single-player modes.
+- Multiplayer UI with chat and basic move synchronization.
 
-🚧 **Planned Enhancements:**
-- Complete network multiplayer implementation (framework ready)
-- AI opponent with difficulty levels
-- Enhanced graphics and animations
-- Chess notation display and export (PGN format)
-- Game statistics and move analysis
-- Tournament mode and time controls
-- Sound effects for moves and game events
-- Customizable themes and piece sets
+🚧 Planned
+- Strengthen multiplayer: reconnection, resume, spectator, robustness.
+- AI improvements and difficulty options.
+- Notation display/export (PGN), statistics, analysis.
+- Better graphics/animations, sound effects, themes/skins.
+
+## Known Limitations
+- Multiplayer is an early version: move sync and chat are available; reconnection, resume, and spectators are not yet implemented.
+- GUI uses Unicode piece symbols by default; no image-based skins included yet.
+
+## Architecture & Decisions
+- Logic reuse: GUI builds on the stable Console engine to keep behavior consistent.
+- Minimal extra abstraction: further layering is deferred until there’s a clear need (e.g., web/mobile frontends, richer spectators, robust reconnection/rollback). If needed later, lightweight interfaces like a GUI-facing `GameProvider` and simple DTOs can be introduced without breaking existing code.
 
 ## Troubleshooting
-
-### Common Issues
-1. **Compilation Errors**: Ensure Java JDK is installed and in PATH
-2. **GUI Not Appearing**: Check if Java Swing is supported on your system
-3. **Script Won't Run**: Right-click run.bat → "Run as Administrator" if needed
-4. **Save Files Not Found**: The `saves/` directory is created automatically on first save
-
-### Development Setup
-- **IDE**: Works with any Java IDE (VS Code, IntelliJ, Eclipse)
-- **Debugging**: Enable console output for detailed game logic information
-- **Testing**: Use Console package independently for logic testing
-- **Save System**: Saves are stored as serialized `.chess` files in `saves/` directory
+1) Script fails to run: ensure JDK is installed and on PATH; try running `run.bat` from a terminal.
+2) GUI doesn’t appear: confirm Java Swing works on your system.
+3) Firewall prompts: allow Java for hosting/joining multiplayer on Windows.
+4) Manual run fails: use the fully qualified main class `GUI.MainMenuApp` and include project root `.` on the classpath.
+5) Saves not found: the `saves/` folder is created automatically on first save.
 
 ## Contributing
+This is an educational project for learning OOP concepts. Explore, learn, and extend as you like.
 
-This is an educational project for learning OOP concepts. Feel free to explore the code and extend functionality as needed.
-
----
-*Created by Team GrumpyVets - Object-Oriented Programming Course Project*
+— Team GrumpyVets
