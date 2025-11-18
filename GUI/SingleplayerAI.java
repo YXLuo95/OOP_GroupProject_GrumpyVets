@@ -1,13 +1,12 @@
 package GUI;
 
-import logic.GameSession;
+import java.awt.*;
+import javax.swing.*;
 import logic.Board;
 import logic.GameSave;
+import logic.GameSession;
 import logic.Rules;
 import objects.*;
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
 
 /**
  * Single Player Chess Game GUI (with AI hooks)
@@ -22,10 +21,6 @@ public class SingleplayerAI extends JFrame {
      * A minimal AI interface: return a move as {startRow,startCol,endRow,endCol}.
      * Return null when no legal move is available.
      */
-    public interface AIOpponent {
-        int[] chooseMove(Board board, PieceColor aiColor);
-    }
-
     private AIOpponent aiOpponent = null;
     private PieceColor aiColor = null; // The side controlled by AI (WHITE/BLACK) or null when disabled
 
@@ -37,7 +32,7 @@ public class SingleplayerAI extends JFrame {
     }
 
     // Core Game Components
-    private ChessBoard chessBoard;
+    private BoardView chessBoard;
     private GameSession gameSession;
     private JLabel statusLabel;
 
@@ -60,7 +55,18 @@ public class SingleplayerAI extends JFrame {
         JToolBar toolbar = createToolbar();
         add(toolbar, BorderLayout.NORTH);
 
-        chessBoard = new ChessBoard();
+        chessBoard = new BoardView(
+            () -> gameSession.getBoard(),
+            () -> gameSession.getCurrentTurn(),
+            () -> gameSession.isGameOver(),
+            (sr, sc, er, ec) -> gameSession.playMove(sr, sc, er, ec),
+            (sr, sc, er, ec) -> {
+                updateStatus();
+                // After human move, if AI should move next, trigger it
+                maybeMakeAIMove();
+                chessBoard.repaint();
+            }
+        );
         JPanel centerPanel = new JPanel(new GridBagLayout());
         centerPanel.add(chessBoard);
         add(centerPanel, BorderLayout.CENTER);
@@ -235,266 +241,6 @@ public class SingleplayerAI extends JFrame {
                 updateStatus();
                 chessBoard.resetSelection();
                 chessBoard.repaint();
-            }
-        }
-    }
-
-    // ===================== Inner Board Component =====================
-    private class ChessBoard extends JPanel {
-        private final int BOARD_SIZE = 8;
-        private final int CELL_SIZE = 75;
-
-        private int selectedRow = -1;
-        private int selectedCol = -1;
-
-        private boolean isDragging = false;
-        private int dragStartRow = -1;
-        private int dragStartCol = -1;
-        private Point dragOffset = new Point();
-        private Point currentDragPosition = new Point();
-
-        public ChessBoard() {
-            setPreferredSize(new Dimension(BOARD_SIZE * CELL_SIZE, BOARD_SIZE * CELL_SIZE));
-            setBackground(Color.WHITE);
-
-            MouseAdapter mouseHandler = new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    int col = e.getX() / CELL_SIZE;
-                    int row = e.getY() / CELL_SIZE;
-
-                    if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE) {
-                        handleCellClick(row, col);
-                    }
-                }
-
-                @Override
-                public void mousePressed(MouseEvent e) {
-                    if (gameSession.isGameOver()) return;
-
-                    int col = e.getX() / CELL_SIZE;
-                    int row = e.getY() / CELL_SIZE;
-
-                    if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE) {
-                        Piece piece = gameSession.getBoard().getPieceAt(row, col);
-                        if (piece != null && piece.getColor() == gameSession.getCurrentTurn()) {
-                            isDragging = true;
-                            dragStartRow = row;
-                            dragStartCol = col;
-
-                            int pieceX = col * CELL_SIZE + CELL_SIZE / 2;
-                            int pieceY = row * CELL_SIZE + CELL_SIZE / 2;
-                            dragOffset.x = e.getX() - pieceX;
-                            dragOffset.y = e.getY() - pieceY;
-
-                            currentDragPosition.x = e.getX();
-                            currentDragPosition.y = e.getY();
-
-                            selectedRow = row;
-                            selectedCol = col;
-                            repaint();
-                        }
-                    }
-                }
-
-                @Override
-                public void mouseReleased(MouseEvent e) {
-                    if (isDragging) {
-                        int col = e.getX() / CELL_SIZE;
-                        int row = e.getY() / CELL_SIZE;
-
-                        if (!gameSession.isGameOver() &&
-                            row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE) {
-                            if (row != dragStartRow || col != dragStartCol) {
-                                boolean moved = gameSession.playMove(dragStartRow, dragStartCol, row, col);
-                                if (moved) {
-                                    updateStatus();
-                                    // If AI is configured and it's AI's turn now, make AI move
-                                    maybeMakeAIMove();
-                                }
-                            }
-                        }
-
-                        isDragging = false;
-                        dragStartRow = -1;
-                        dragStartCol = -1;
-                        selectedRow = -1;
-                        selectedCol = -1;
-                        repaint();
-                    }
-                }
-
-                @Override
-                public void mouseDragged(MouseEvent e) {
-                    if (isDragging) {
-                        currentDragPosition.x = e.getX();
-                        currentDragPosition.y = e.getY();
-                        repaint();
-                    }
-                }
-            };
-
-            addMouseListener(mouseHandler);
-            addMouseMotionListener(mouseHandler);
-        }
-
-        private void handleCellClick(int row, int col) {
-            if (gameSession.isGameOver()) return;
-
-            if (selectedRow == -1) {
-                Piece piece = gameSession.getBoard().getPieceAt(row, col);
-                if (piece != null && piece.getColor() == gameSession.getCurrentTurn()) {
-                    selectedRow = row;
-                    selectedCol = col;
-                    repaint();
-                }
-            } else {
-                if (selectedRow == row && selectedCol == col) {
-                    selectedRow = -1;
-                    selectedCol = -1;
-                } else {
-                    boolean moved = gameSession.playMove(selectedRow, selectedCol, row, col);
-                    if (moved) {
-                        updateStatus();
-                        // Trigger AI if needed
-                        maybeMakeAIMove();
-                    }
-                    selectedRow = -1;
-                    selectedCol = -1;
-                }
-                repaint();
-            }
-        }
-
-        public void resetSelection() {
-            selectedRow = -1;
-            selectedCol = -1;
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2d = (Graphics2D) g;
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-            for (int row = 0; row < BOARD_SIZE; row++) {
-                for (int col = 0; col < BOARD_SIZE; col++) {
-                    Color cellColor;
-                    if ((row + col) % 2 == 0) cellColor = new Color(240, 217, 181);
-                    else cellColor = new Color(181, 136, 99);
-
-                    if (row == selectedRow && col == selectedCol && !isDragging) {
-                        cellColor = new Color(255, 255, 0, 128);
-                    }
-
-                    g2d.setColor(cellColor);
-                    g2d.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-
-                    if (isDragging) {
-                        Point mousePos = getMousePosition();
-                        if (mousePos != null) {
-                            int hoverCol = mousePos.x / CELL_SIZE;
-                            int hoverRow = mousePos.y / CELL_SIZE;
-                            if (hoverRow == row && hoverCol == col &&
-                                hoverRow >= 0 && hoverRow < BOARD_SIZE &&
-                                hoverCol >= 0 && hoverCol < BOARD_SIZE) {
-                                g2d.setColor(new Color(0, 255, 0, 100));
-                                g2d.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-                            }
-                        }
-                    }
-
-                    g2d.setColor(Color.BLACK);
-                    g2d.drawRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-                }
-            }
-
-            drawPieces(g2d);
-        }
-
-        private void drawPieces(Graphics2D g2d) {
-            g2d.setFont(new Font("Serif", Font.BOLD, 48));
-
-            for (int row = 0; row < BOARD_SIZE; row++) {
-                for (int col = 0; col < BOARD_SIZE; col++) {
-                    Piece piece = gameSession.getBoard().getPieceAt(row, col);
-                    if (piece != null) {
-                        if (isDragging && row == dragStartRow && col == dragStartCol) continue;
-                        drawPiece(g2d, piece, row, col);
-                    }
-                }
-            }
-
-            if (isDragging && dragStartRow >= 0 && dragStartCol >= 0) {
-                Piece draggedPiece = gameSession.getBoard().getPieceAt(dragStartRow, dragStartCol);
-                if (draggedPiece != null) {
-                    drawDraggedPiece(g2d, draggedPiece, currentDragPosition);
-                }
-            }
-        }
-
-        private void drawPiece(Graphics2D g2d, Piece piece, int row, int col) {
-            String symbol = getPieceSymbol(piece);
-
-            Color pieceColor = (piece.getColor() == PieceColor.WHITE) ? Color.WHITE : Color.BLACK;
-            Color outlineColor = (piece.getColor() == PieceColor.WHITE) ? Color.BLACK : Color.WHITE;
-
-            FontMetrics fm = g2d.getFontMetrics();
-            int textWidth = fm.stringWidth(symbol);
-            int textHeight = fm.getAscent();
-
-            int x = col * CELL_SIZE + (CELL_SIZE - textWidth) / 2;
-            int y = row * CELL_SIZE + (CELL_SIZE + textHeight) / 2;
-
-            g2d.setColor(outlineColor);
-            for (int dx = -1; dx <= 1; dx++) {
-                for (int dy = -1; dy <= 1; dy++) {
-                    if (dx != 0 || dy != 0) g2d.drawString(symbol, x + dx, y + dy);
-                }
-            }
-
-            g2d.setColor(pieceColor);
-            g2d.drawString(symbol, x, y);
-        }
-
-        private void drawDraggedPiece(Graphics2D g2d, Piece piece, Point position) {
-            String symbol = getPieceSymbol(piece);
-
-            Color pieceColor = (piece.getColor() == PieceColor.WHITE) ?
-                new Color(255, 255, 255, 200) : new Color(0, 0, 0, 200);
-            Color outlineColor = (piece.getColor() == PieceColor.WHITE) ?
-                new Color(0, 0, 0, 200) : new Color(255, 255, 255, 200);
-
-            FontMetrics fm = g2d.getFontMetrics();
-            int textWidth = fm.stringWidth(symbol);
-            int textHeight = fm.getAscent();
-
-            int x = position.x - dragOffset.x - textWidth / 2;
-            int y = position.y - dragOffset.y + textHeight / 2;
-
-            g2d.setColor(outlineColor);
-            for (int dx = -1; dx <= 1; dx++) {
-                for (int dy = -1; dy <= 1; dy++) {
-                    if (dx != 0 || dy != 0) {
-                        g2d.drawString(symbol, x + dx, y + dy);
-                    }
-                }
-            }
-
-            g2d.setColor(pieceColor);
-            g2d.drawString(symbol, x, y);
-        }
-
-        private String getPieceSymbol(Piece piece) {
-            boolean isWhite = piece.getColor() == PieceColor.WHITE;
-            switch (piece.getType()) {
-                case KING:   return isWhite ? "♔" : "♚";
-                case QUEEN:  return isWhite ? "♕" : "♛";
-                case ROOK:   return isWhite ? "♖" : "♜";
-                case BISHOP: return isWhite ? "♗" : "♝";
-                case KNIGHT: return isWhite ? "♘" : "♞";
-                case PAWN:   return isWhite ? "♙" : "♟";
-                default:     return "?";
             }
         }
     }

@@ -9,7 +9,7 @@ import objects.*;
  * - Uses simple material evaluation with in-check penalty.
  * - Depth is configurable via constructor.
  */
-public class MinimaxAIOpponent implements SingleplayerAI.AIOpponent {
+public class MinimaxAIOpponent implements AIOpponent {
     private final int maxDepth;
 
     public MinimaxAIOpponent(int depth) {

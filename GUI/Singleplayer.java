@@ -1,13 +1,12 @@
 package GUI;
 
-import logic.GameSession;
+import java.awt.*;
+import javax.swing.*;
 import logic.Board;
 import logic.GameSave;
+import logic.GameSession;
 import logic.Rules;
 import objects.*;
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
 
 /**
  * Single Player Chess Game GUI
@@ -25,7 +24,7 @@ public class Singleplayer extends JFrame {
     
     // Core Game Components
     // Purpose: Manage chess game logic and visual representation
-    private ChessBoard chessBoard;    // Custom interactive chess board component
+    private BoardView chessBoard;    // Reusable interactive chess board component
     private GameSession gameSession;  // Chess game logic controller and state manager
     private JLabel statusLabel;       // Display area for game status and move information
     
@@ -65,7 +64,16 @@ public class Singleplayer extends JFrame {
         
         // Center Section - Interactive Chess Board
         // Purpose: Main game area with enhanced piece interaction capabilities
-        chessBoard = new ChessBoard();
+        chessBoard = new BoardView(
+            () -> gameSession.getBoard(),
+            () -> gameSession.getCurrentTurn(),
+            () -> gameSession.isGameOver(),
+            (sr, sc, er, ec) -> gameSession.playMove(sr, sc, er, ec),
+            (sr, sc, er, ec) -> {
+                updateStatus();
+                chessBoard.repaint();
+            }
+        );
         JPanel centerPanel = new JPanel(new GridBagLayout()); // Centers the board
         centerPanel.add(chessBoard);
         add(centerPanel, BorderLayout.CENTER);
@@ -245,332 +253,4 @@ public class Singleplayer extends JFrame {
         }
     }
 
-    /**
-     * Interactive Chess Board Inner Class
-     * 
-     * Purpose: Provides enhanced chess board interaction with dual input methods
-     * Features:
-     * - Click-and-move: Traditional chess interface (click piece, click destination)
-     * - Drag-and-drop: Modern interface (drag piece to destination)
-     * - Real-time visual feedback during piece manipulation
-     * - Integration with chess game logic for move validation
-     * - Responsive highlighting and smooth user experience
-     */
-    private class ChessBoard extends JPanel {
-        // Board Display Constants
-        private final int BOARD_SIZE = 8;     // 8x8 chess board
-        private final int CELL_SIZE = 75;     // Optimized square size for centered layout
-        
-        // Click-and-Move State Variables
-        // Purpose: Track piece selection for traditional click interface
-        private int selectedRow = -1;         // Currently selected piece row (-1 = none)
-        private int selectedCol = -1;         // Currently selected piece column (-1 = none)
-        
-        // Drag-and-Drop State Variables
-        // Purpose: Track piece dragging operations for modern interface
-        private boolean isDragging = false;           // Flag indicating active drag operation
-        private int dragStartRow = -1;               // Starting row of dragged piece (-1 = none)
-        private int dragStartCol = -1;               // Starting column of dragged piece (-1 = none)
-        private Point dragOffset = new Point();      // Mouse offset from piece center for smooth dragging
-        private Point currentDragPosition = new Point(); // Current mouse position during drag operation
-        
-        /**
-         * ChessBoard Constructor
-         * Purpose: Initializes the interactive chess board with enhanced mouse handling
-         */
-        public ChessBoard() {
-            setPreferredSize(new Dimension(BOARD_SIZE * CELL_SIZE, BOARD_SIZE * CELL_SIZE));
-            setBackground(Color.WHITE);
-            
-            // Mouse listener for clicks and drag operations
-            MouseAdapter mouseHandler = new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    int col = e.getX() / CELL_SIZE;
-                    int row = e.getY() / CELL_SIZE;
-                    
-                    if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE) {
-                        handleCellClick(row, col);
-                    }
-                }
-                
-                @Override
-                public void mousePressed(MouseEvent e) {
-                    // Don't allow any interaction if game is over
-                    if (gameSession.isGameOver()) {
-                        return;
-                    }
-                    
-                    int col = e.getX() / CELL_SIZE;
-                    int row = e.getY() / CELL_SIZE;
-                    
-                    if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE) {
-                        Piece piece = gameSession.getBoard().getPieceAt(row, col);
-                        if (piece != null && piece.getColor() == gameSession.getCurrentTurn()) {
-                            // Start dragging
-                            isDragging = true;
-                            dragStartRow = row;
-                            dragStartCol = col;
-                            
-                            // Calculate offset from piece center
-                            int pieceX = col * CELL_SIZE + CELL_SIZE / 2;
-                            int pieceY = row * CELL_SIZE + CELL_SIZE / 2;
-                            dragOffset.x = e.getX() - pieceX;
-                            dragOffset.y = e.getY() - pieceY;
-                            
-                            currentDragPosition.x = e.getX();
-                            currentDragPosition.y = e.getY();
-                            
-                            // Also select the piece for visual feedback
-                            selectedRow = row;
-                            selectedCol = col;
-                            repaint();
-                        }
-                    }
-                }
-                
-                @Override
-                public void mouseReleased(MouseEvent e) {
-                    if (isDragging) {
-                        int col = e.getX() / CELL_SIZE;
-                        int row = e.getY() / CELL_SIZE;
-                        
-                        // Check if game is over before allowing drag move
-                        if (gameSession.isGameOver()) {
-                            // Game is over, don't allow move
-                        } else if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE) {
-                            if (row != dragStartRow || col != dragStartCol) {
-                                // Try to move the piece
-                                boolean moved = gameSession.playMove(dragStartRow, dragStartCol, row, col);
-                                if (moved) {
-                                    updateStatus();
-                                }
-                            }
-                        }
-                        
-                        // Reset drag state
-                        isDragging = false;
-                        dragStartRow = -1;
-                        dragStartCol = -1;
-                        selectedRow = -1;
-                        selectedCol = -1;
-                        repaint();
-                    }
-                }
-                
-                @Override
-                public void mouseDragged(MouseEvent e) {
-                    if (isDragging) {
-                        currentDragPosition.x = e.getX();
-                        currentDragPosition.y = e.getY();
-                        repaint();
-                    }
-                }
-            };
-            
-            addMouseListener(mouseHandler);
-            addMouseMotionListener(mouseHandler);
-        }
-        
-        // Handle cell click for selecting/moving pieces
-        private void handleCellClick(int row, int col) {
-            if (gameSession.isGameOver()) {
-                return; // Game over, no moves allowed
-            }
-            
-            if (selectedRow == -1) {
-                // First click - select piece
-                Piece piece = gameSession.getBoard().getPieceAt(row, col);
-                if (piece != null && piece.getColor() == gameSession.getCurrentTurn()) {
-                    selectedRow = row;
-                    selectedCol = col;
-                    System.out.println("Selected " + piece.getType() + " at (" + row + "," + col + ")");
-                    repaint();
-                }
-            } else {
-                // Second click - attempt move
-                if (selectedRow == row && selectedCol == col) {
-                    // Click same cell, deselect
-                    selectedRow = -1;
-                    selectedCol = -1;
-                    System.out.println("Deselected piece");
-                } else {
-                    // Try to move piece using Console game logic
-                    System.out.println("Attempting move from (" + selectedRow + "," + selectedCol + ") to (" + row + "," + col + ")");
-                    boolean moved = gameSession.playMove(selectedRow, selectedCol, row, col);
-                    if (moved) {
-                        System.out.println("Move successful!");
-                        updateStatus();
-                    } else {
-                        System.out.println("Move failed!");
-                    }
-                    selectedRow = -1;
-                    selectedCol = -1;
-                }
-                repaint();
-            }
-        }
-        
-        // Reset selection
-        public void resetSelection() {
-            selectedRow = -1;
-            selectedCol = -1;
-        }
-        
-        // Paint component
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2d = (Graphics2D) g;
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            
-            // Draw chess board cells
-            for (int row = 0; row < BOARD_SIZE; row++) {
-                for (int col = 0; col < BOARD_SIZE; col++) {
-                    Color cellColor;
-                    if ((row + col) % 2 == 0) {
-                        cellColor = new Color(240, 217, 181); // Light cells
-                    } else {
-                        cellColor = new Color(181, 136, 99);  // Dark cells
-                    }
-                    
-                    // Highlight selected cell (for click-and-move)
-                    if (row == selectedRow && col == selectedCol && !isDragging) {
-                        cellColor = new Color(255, 255, 0, 128); // Yellow highlight
-                    }
-                    
-                    g2d.setColor(cellColor);
-                    g2d.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-                    
-                    // Show drop target during drag operation
-                    if (isDragging) {
-                        Point mousePos = getMousePosition();
-                        if (mousePos != null) {
-                            int hoverCol = mousePos.x / CELL_SIZE;
-                            int hoverRow = mousePos.y / CELL_SIZE;
-                            if (hoverRow == row && hoverCol == col && 
-                                hoverRow >= 0 && hoverRow < BOARD_SIZE && 
-                                hoverCol >= 0 && hoverCol < BOARD_SIZE) {
-                                // Highlight potential drop target
-                                g2d.setColor(new Color(0, 255, 0, 100)); // Green highlight
-                                g2d.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-                            }
-                        }
-                    }
-                    
-                    // Draw cell borders
-                    g2d.setColor(Color.BLACK);
-                    g2d.drawRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-                }
-            }
-            
-            // Draw pieces (from Console Board)
-            drawPieces(g2d);
-        }
-        
-        // Draw pieces on board
-        private void drawPieces(Graphics2D g2d) {
-            g2d.setFont(new Font("Serif", Font.BOLD, 48));
-            
-            // Iterate over board squares
-            for (int row = 0; row < BOARD_SIZE; row++) {
-                for (int col = 0; col < BOARD_SIZE; col++) {
-                    Piece piece = gameSession.getBoard().getPieceAt(row, col);
-                    if (piece != null) {
-                        // Don't draw the piece at its original position if it's being dragged
-                        if (isDragging && row == dragStartRow && col == dragStartCol) {
-                            continue; // Skip drawing this piece as it's being dragged
-                        }
-                        drawPiece(g2d, piece, row, col);
-                    }
-                }
-            }
-            
-            // Draw the dragged piece at current cursor position
-            if (isDragging && dragStartRow >= 0 && dragStartCol >= 0) {
-                Piece draggedPiece = gameSession.getBoard().getPieceAt(dragStartRow, dragStartCol);
-                if (draggedPiece != null) {
-                    drawDraggedPiece(g2d, draggedPiece, currentDragPosition);
-                }
-            }
-        }
-        
-        // Draw individual piece
-        private void drawPiece(Graphics2D g2d, Piece piece, int row, int col) {
-            String symbol = getPieceSymbol(piece);
-            
-            // Set color
-            Color pieceColor = (piece.getColor() == PieceColor.WHITE) ? Color.WHITE : Color.BLACK;
-            Color outlineColor = (piece.getColor() == PieceColor.WHITE) ? Color.BLACK : Color.WHITE;
-            
-            FontMetrics fm = g2d.getFontMetrics();
-            int textWidth = fm.stringWidth(symbol);
-            int textHeight = fm.getAscent();
-            
-            int x = col * CELL_SIZE + (CELL_SIZE - textWidth) / 2;
-            int y = row * CELL_SIZE + (CELL_SIZE + textHeight) / 2;
-            
-            // Draw outline
-            g2d.setColor(outlineColor);
-            for (int dx = -1; dx <= 1; dx++) {
-                for (int dy = -1; dy <= 1; dy++) {
-                    if (dx != 0 || dy != 0) {
-                        g2d.drawString(symbol, x + dx, y + dy);
-                    }
-                }
-            }
-            
-            // Draw piece
-            g2d.setColor(pieceColor);
-            g2d.drawString(symbol, x, y);
-        }
-        
-        // Draw a piece being dragged at the cursor position
-        private void drawDraggedPiece(Graphics2D g2d, Piece piece, Point position) {
-            String symbol = getPieceSymbol(piece);
-            
-            // Set color with slight transparency to show it's being dragged
-            Color pieceColor = (piece.getColor() == PieceColor.WHITE) ? 
-                new Color(255, 255, 255, 200) : new Color(0, 0, 0, 200);
-            Color outlineColor = (piece.getColor() == PieceColor.WHITE) ? 
-                new Color(0, 0, 0, 200) : new Color(255, 255, 255, 200);
-            
-            FontMetrics fm = g2d.getFontMetrics();
-            int textWidth = fm.stringWidth(symbol);
-            int textHeight = fm.getAscent();
-            
-            // Center the piece on cursor position, accounting for drag offset
-            int x = position.x - dragOffset.x - textWidth / 2;
-            int y = position.y - dragOffset.y + textHeight / 2;
-            
-            // Draw outline for better visibility
-            g2d.setColor(outlineColor);
-            for (int dx = -1; dx <= 1; dx++) {
-                for (int dy = -1; dy <= 1; dy++) {
-                    if (dx != 0 || dy != 0) {
-                        g2d.drawString(symbol, x + dx, y + dy);
-                    }
-                }
-            }
-            
-            // Draw the dragged piece
-            g2d.setColor(pieceColor);
-            g2d.drawString(symbol, x, y);
-        }
-        
-        // Get Unicode symbol for piece
-        private String getPieceSymbol(Piece piece) {
-            boolean isWhite = piece.getColor() == PieceColor.WHITE;
-            
-            switch (piece.getType()) {
-                case KING:   return isWhite ? "♔" : "♚";
-                case QUEEN:  return isWhite ? "♕" : "♛";
-                case ROOK:   return isWhite ? "♖" : "♜";
-                case BISHOP: return isWhite ? "♗" : "♝";
-                case KNIGHT: return isWhite ? "♘" : "♞";
-                case PAWN:   return isWhite ? "♙" : "♟";
-                default:     return "?";
-            }
-        }
-    }
 }
