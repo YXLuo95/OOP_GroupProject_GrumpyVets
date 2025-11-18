@@ -54,9 +54,12 @@ public class MultiplayerFrame extends JFrame {
         initializeComponents();  // Create and configure all UI components
         setupLayout();          // Arrange components in the window layout
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(1000, 700);     // Set window dimensions (width x height)
+        // Use pack() so the board respects its preferred size; avoids layout issues on some platforms
+        pack();
         setLocationRelativeTo(null);  // Center window on screen
         setResizable(false);    // Prevent window resizing for consistent layout
+        // Ensure initial paint after construction
+        SwingUtilities.invokeLater(() -> chessBoard.repaint());
     }
     
     /**
@@ -240,6 +243,10 @@ public class MultiplayerFrame extends JFrame {
                 if (!success) {
                     throw new RuntimeException("Failed to start hosting");
                 }
+                // Switch to multiplayer session's managed GameSession so turn/status stay in sync
+                gameSession = multiplayerSession.getGameSession();
+                updateGameStatus();
+                chessBoard.repaint();
                 addChatMessage("System", "Successfully hosting on port " + port);
             } catch (Exception ex) {
                 addChatMessage("System", "Hosting failed: " + ex.getMessage());
@@ -280,6 +287,10 @@ public class MultiplayerFrame extends JFrame {
                 if (!success) {
                     throw new RuntimeException("Failed to connect to host");
                 }
+                // Sync local reference to the multiplayer-managed session
+                gameSession = multiplayerSession.getGameSession();
+                updateGameStatus();
+                chessBoard.repaint();
                 addChatMessage("System", "Successfully connected to " + hostIp + ":" + port);
             } catch (Exception ex) {
                 addChatMessage("System", "Connection failed: " + ex.getMessage());
