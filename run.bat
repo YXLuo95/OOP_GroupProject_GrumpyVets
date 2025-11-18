@@ -1,60 +1,61 @@
 @echo off
-REM Chess Game Startup Script - Integrated Version
+setlocal ENABLEDELAYEDEXPANSION
+REM Chess Game Startup Script - Updated to build into /out and run from there
+
+set OUT=out
 
 echo ========================================
 echo     Chess Game - Main Launcher
 echo ========================================
 
-echo.
-echo Compiling all Java files...
-echo - Console logic and objects...
-javac -cp ".;Console" Console\logic\*.java Console\objects\*.java
+REM --- Check JDK availability ---
+javac -version >nul 2>&1
 if %errorlevel% neq 0 (
-    echo Console compilation failed!
+    echo.
+    echo ERROR: javac not found. Please ensure JDK is installed and on PATH.
     pause
     exit /b 1
 )
 
-echo - GUI components...
-javac -cp ".;Console" GUI\*.java
+REM --- Clean output directory ---
+if exist "%OUT%" (
+    rmdir /s /q "%OUT%" >nul 2>&1
+)
+mkdir "%OUT%" >nul 2>&1
+
+echo.
+echo Compiling project to "%OUT%"...
+echo   - logic, objects, network, GUI
+javac -d "%OUT%" Console\logic\*.java Console\objects\*.java Console\network\*.java GUI\*.java
 if %errorlevel% neq 0 (
-    echo GUI compilation failed!
+    echo.
+    echo Build failed. See errors above.
     pause
     exit /b 1
 )
 
 echo.
 echo ========================================
-echo    Compilation Successful!
+echo       Build Successful!
 echo ========================================
 
 echo.
 echo Choose how to run the chess game:
-echo 1. Start Chess Game GUI (Recommended)
-echo 2. Quick Start (No menu)
-echo 3. Exit
+echo   1. Start Main Menu (Recommended)
+echo   2. Exit
 echo.
-set /p choice="Please enter your choice (1-3): "
+set /p choice="Please enter your choice (1-2): "
 
-if "%choice%"=="1" (
-    echo.
-    echo Starting Chess Game with Main Menu...
-    echo You can choose Single Player or Multiplayer from the menu.
-    echo.
-    java -cp ".;Console;GUI" GUI.MainMenuApp
-) else if "%choice%"=="2" (
-    echo.
-    echo Quick Starting Chess Game...
-    echo Note: Console will display game logic debug information
-    echo.
-    java -cp ".;Console;GUI" GUI.MainMenuApp
-) else if "%choice%"=="3" (
+if "%choice%"=="2" (
     echo Exiting...
     exit /b 0
-) else (
-    echo Invalid choice, starting Chess Game with Main Menu...
-    java -cp ".;Console;GUI" GUI.MainMenuApp
 )
+
+echo.
+echo Starting Chess Game with Main Menu...
+echo You can choose Single Player, Single Player (AI), or Multiplayer from the menu.
+echo.
+java -cp "%OUT%" GUI.MainMenuApp
 
 echo.
 echo Chess Game ended.

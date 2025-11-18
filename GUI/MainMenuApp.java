@@ -27,7 +27,8 @@ public class MainMenuApp {
 
 class MainMenuFrame extends JFrame {
     private final JButton btnSingle = new JButton("Single Player");
-    private final JButton btnMulti  = new JButton("Multiplayer(P2P Demo)");
+    private final JButton btnSingleAI = new JButton("Single Player (AI)");
+    private final JButton btnMulti  = new JButton("Multiplayer(P2P)");
     private final JButton btnSaved  = new JButton("Saved Game");
 
     MainMenuFrame() {
@@ -45,11 +46,13 @@ class MainMenuFrame extends JFrame {
         int row = 0;
         center.add(title("Chess"), pos(gbc, row++));
         center.add(subtitle("Main Menu"), pos(gbc, row++));
-        styleBlack(btnSingle); styleBlack(btnMulti); styleBlack(btnSaved);
+        styleBlack(btnSingle); styleBlack(btnSingleAI); styleBlack(btnMulti); styleBlack(btnSaved);
         btnSingle.addActionListener(e -> openSinglePlayer());
+        btnSingleAI.addActionListener(e -> openSinglePlayerAI());
         btnMulti.addActionListener(e -> openMultiplayer());
         btnSaved.addActionListener(e -> openSavedGame());
         center.add(btnSingle, pos(gbc, row++));
+        center.add(btnSingleAI, pos(gbc, row++));
         center.add(btnMulti,  pos(gbc, row++));
         center.add(btnSaved,  pos(gbc, row++));
 
@@ -113,6 +116,62 @@ class MainMenuFrame extends JFrame {
                     JOptionPane.ERROR_MESSAGE);
                 setVisible(true);
             }
+        });
+    }
+
+    private void openSinglePlayerAI() {
+        // Hide main menu
+        setVisible(false);
+
+        // Open single player (AI-ready) game window
+        SwingUtilities.invokeLater(() -> {
+            // Prompt for Minimax depth (2 / 3 / 4)
+            String[] depths = {"Depth 2", "Depth 3", "Depth 4"};
+            int choice = JOptionPane.showOptionDialog(
+                this,
+                "Select Minimax search depth:",
+                "AI Difficulty",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                depths,
+                depths[1]
+            );
+            int depth = 3; // default
+            if (choice == 0) depth = 2;
+            else if (choice == 1) depth = 3;
+            else if (choice == 2) depth = 4;
+
+            // Prompt for AI side (default: Black so player moves first)
+            Object[] sides = {"AI plays Black (default)", "AI plays White"};
+            int sideIdx = JOptionPane.showOptionDialog(
+                this,
+                "Who should the AI play as?",
+                "AI Side",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                sides,
+                sides[0]
+            );
+
+            SingleplayerAI aiWindow = new SingleplayerAI();
+            // Default: AI plays Black using Minimax (depth 3)
+            try {
+                objects.PieceColor aiColor = (sideIdx == 1) ? objects.PieceColor.WHITE : objects.PieceColor.BLACK;
+                aiWindow.setAIOpponent(new MinimaxAIOpponent(depth), aiColor);
+            } catch (Throwable t) {
+                // If anything goes wrong, continue without AI
+            }
+            aiWindow.setVisible(true);
+
+            // When the AI window closes, show main menu again
+            aiWindow.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosed(WindowEvent e) {
+                    setVisible(true);
+                }
+            });
         });
     }
 
