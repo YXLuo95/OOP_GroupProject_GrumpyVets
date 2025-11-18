@@ -93,18 +93,26 @@ public class MultiplayerFrame extends JFrame {
             () -> gameSession.getBoard(),
             () -> gameSession.getCurrentTurn(),
             () -> gameSession.isGameOver(),
-            (sr, sc, er, ec) -> gameSession.playMove(sr, sc, er, ec),
+            // Unified move performer: if in multiplayer, delegate to multiplayerSession which internally
+            // validates turn ownership and sends the move over the network. Otherwise use local gameSession.
+            (sr, sc, er, ec) -> {
+                if (multiplayerSession != null && multiplayerSession.isConnected()) {
+                    // Prevent premature interaction (extra safety beyond color turn check)
+                    if (!multiplayerSession.isMyTurn()) {
+                        addChatMessage("System", "Not your turn yet.");
+                        return false;
+                    }
+                    return multiplayerSession.makeMove(sr, sc, er, ec);
+                } else {
+                    return gameSession.playMove(sr, sc, er, ec);
+                }
+            },
+            // Move listener: update UI only (actual network send already handled in multiplayerSession.makeMove)
             (sr, sc, er, ec) -> {
                 updateGameStatus();
                 chessBoard.repaint();
-                // Send move to opponent if connected
                 if (multiplayerSession != null && multiplayerSession.isConnected()) {
-                    try {
-                        multiplayerSession.makeMove(sr, sc, er, ec);
-                        addChatMessage("System", "Move sent to opponent");
-                    } catch (Exception ex) {
-                        addChatMessage("System", "Failed to send move: " + ex.getMessage());
-                    }
+                    addChatMessage("System", "Move performed.");
                 }
             }
         );
@@ -247,6 +255,9 @@ public class MultiplayerFrame extends JFrame {
                 gameSession = multiplayerSession.getGameSession();
                 updateGameStatus();
                 chessBoard.repaint();
+                // Explicit player color indicator
+                statusLabel.setText("You are White. Your move.");
+                chessBoard.setFlipped(false); // White perspective
                 addChatMessage("System", "Successfully hosting on port " + port);
             } catch (Exception ex) {
                 addChatMessage("System", "Hosting failed: " + ex.getMessage());
@@ -291,6 +302,9 @@ public class MultiplayerFrame extends JFrame {
                 gameSession = multiplayerSession.getGameSession();
                 updateGameStatus();
                 chessBoard.repaint();
+                // Explicit player color indicator for client (Black side waits first)
+                statusLabel.setText("You are Black. Waiting for White...");
+                chessBoard.setFlipped(true); // Black perspective
                 addChatMessage("System", "Successfully connected to " + hostIp + ":" + port);
             } catch (Exception ex) {
                 addChatMessage("System", "Connection failed: " + ex.getMessage());
@@ -461,17 +475,11 @@ public class MultiplayerFrame extends JFrame {
             @Override
             public void onOpponentMove(GameMove move) {
                 SwingUtilities.invokeLater(() -> {
-                    try {
-                        boolean success = gameSession.playMove(move.getStartRow(), move.getStartCol(), 
-                                                             move.getEndRow(), move.getEndCol());
-                        if (success) {
-                            updateGameStatus();
-                            chessBoard.repaint();
-                            addChatMessage("System", "Opponent moved");
-                        }
-                    } catch (Exception e) {
-                        addChatMessage("System", "Error processing opponent move: " + e.getMessage());
-                    }
+                    // MultiplayerSession already applied the move before invoking this callback.
+                    // Just refresh UI to reflect updated board immediately.
+                    updateGameStatus();
+                    chessBoard.repaint();
+                    addChatMessage("System", "Opponent moved");
                 });
             }
             

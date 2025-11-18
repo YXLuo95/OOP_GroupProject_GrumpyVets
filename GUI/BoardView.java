@@ -52,6 +52,9 @@ public class BoardView extends JPanel {
     private static final int BOARD_SIZE = 8;
     private static final int CELL_SIZE = 75;
 
+    // Flipped orientation: when true board is shown from Black's perspective (rank 8 at bottom).
+    private boolean flipped = false;
+
     private int selectedRow = -1;
     private int selectedCol = -1;
 
@@ -88,16 +91,20 @@ public class BoardView extends JPanel {
         MouseAdapter mouseHandler = new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                int col = e.getX() / CELL_SIZE;
-                int row = e.getY() / CELL_SIZE;
+                int displayCol = e.getX() / CELL_SIZE;
+                int displayRow = e.getY() / CELL_SIZE;
+                int col = flipped ? BOARD_SIZE - 1 - displayCol : displayCol;
+                int row = flipped ? BOARD_SIZE - 1 - displayRow : displayRow;
                 if (inBounds(row, col)) handleCellClick(row, col);
             }
 
             @Override
             public void mousePressed(MouseEvent e) {
                 if (isGameOverSupplier.getAsBoolean()) return;
-                int col = e.getX() / CELL_SIZE;
-                int row = e.getY() / CELL_SIZE;
+                int displayCol = e.getX() / CELL_SIZE;
+                int displayRow = e.getY() / CELL_SIZE;
+                int col = flipped ? BOARD_SIZE - 1 - displayCol : displayCol;
+                int row = flipped ? BOARD_SIZE - 1 - displayRow : displayRow;
                 if (!inBounds(row, col)) return;
 
                 Board board = boardSupplier.get();
@@ -108,8 +115,10 @@ public class BoardView extends JPanel {
                     dragStartRow = row;
                     dragStartCol = col;
 
-                    int pieceX = col * CELL_SIZE + CELL_SIZE / 2;
-                    int pieceY = row * CELL_SIZE + CELL_SIZE / 2;
+                    int drawCol = flipped ? BOARD_SIZE - 1 - col : col;
+                    int drawRow = flipped ? BOARD_SIZE - 1 - row : row;
+                    int pieceX = drawCol * CELL_SIZE + CELL_SIZE / 2;
+                    int pieceY = drawRow * CELL_SIZE + CELL_SIZE / 2;
                     dragOffset.x = e.getX() - pieceX;
                     dragOffset.y = e.getY() - pieceY;
                     currentDragPosition.x = e.getX();
@@ -124,8 +133,10 @@ public class BoardView extends JPanel {
             @Override
             public void mouseReleased(MouseEvent e) {
                 if (!isDragging) return;
-                int col = e.getX() / CELL_SIZE;
-                int row = e.getY() / CELL_SIZE;
+                int displayCol = e.getX() / CELL_SIZE;
+                int displayRow = e.getY() / CELL_SIZE;
+                int col = flipped ? BOARD_SIZE - 1 - displayCol : displayCol;
+                int row = flipped ? BOARD_SIZE - 1 - displayRow : displayRow;
 
                 if (!isGameOverSupplier.getAsBoolean() && inBounds(row, col)) {
                     if (row != dragStartRow || col != dragStartCol) {
@@ -154,6 +165,12 @@ public class BoardView extends JPanel {
 
         addMouseListener(mouseHandler);
         addMouseMotionListener(mouseHandler);
+    }
+
+    /** Set flipped orientation (Black's perspective) and repaint. */
+    public void setFlipped(boolean flipped) {
+        this.flipped = flipped;
+        repaint();
     }
 
     /**
@@ -204,6 +221,9 @@ public class BoardView extends JPanel {
         // Draw cells
         for (int row = 0; row < BOARD_SIZE; row++) {
             for (int col = 0; col < BOARD_SIZE; col++) {
+                int drawRow = flipped ? BOARD_SIZE - 1 - row : row;
+                int drawCol = flipped ? BOARD_SIZE - 1 - col : col;
+
                 Color cellColor = ((row + col) % 2 == 0)
                         ? new Color(240, 217, 181)
                         : new Color(181, 136, 99);
@@ -211,22 +231,24 @@ public class BoardView extends JPanel {
                     cellColor = new Color(255, 255, 0, 128);
                 }
                 g2d.setColor(cellColor);
-                g2d.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                g2d.fillRect(drawCol * CELL_SIZE, drawRow * CELL_SIZE, CELL_SIZE, CELL_SIZE);
 
                 if (isDragging) {
                     Point mousePos = getMousePosition();
                     if (mousePos != null) {
-                        int hoverCol = mousePos.x / CELL_SIZE;
-                        int hoverRow = mousePos.y / CELL_SIZE;
+                        int hoverDisplayCol = mousePos.x / CELL_SIZE;
+                        int hoverDisplayRow = mousePos.y / CELL_SIZE;
+                        int hoverCol = flipped ? BOARD_SIZE - 1 - hoverDisplayCol : hoverDisplayCol;
+                        int hoverRow = flipped ? BOARD_SIZE - 1 - hoverDisplayRow : hoverDisplayRow;
                         if (hoverRow == row && hoverCol == col && inBounds(hoverRow, hoverCol)) {
                             g2d.setColor(new Color(0, 255, 0, 100));
-                            g2d.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                            g2d.fillRect(drawCol * CELL_SIZE, drawRow * CELL_SIZE, CELL_SIZE, CELL_SIZE);
                         }
                     }
                 }
 
                 g2d.setColor(Color.BLACK);
-                g2d.drawRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                g2d.drawRect(drawCol * CELL_SIZE, drawRow * CELL_SIZE, CELL_SIZE, CELL_SIZE);
             }
         }
 
@@ -267,8 +289,10 @@ public class BoardView extends JPanel {
         int textWidth = fm.stringWidth(symbol);
         int textHeight = fm.getAscent();
 
-        int x = col * CELL_SIZE + (CELL_SIZE - textWidth) / 2;
-        int y = row * CELL_SIZE + (CELL_SIZE + textHeight) / 2;
+        int drawRow = flipped ? BOARD_SIZE - 1 - row : row;
+        int drawCol = flipped ? BOARD_SIZE - 1 - col : col;
+        int x = drawCol * CELL_SIZE + (CELL_SIZE - textWidth) / 2;
+        int y = drawRow * CELL_SIZE + (CELL_SIZE + textHeight) / 2;
 
         g2d.setColor(outlineColor);
         for (int dx = -1; dx <= 1; dx++) {
