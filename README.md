@@ -1,4 +1,7 @@
 # OOP_GroupProject_GrumpyVets — Chess Game
+Yuxi Luo
+Mendoza Sergio
+Fall 2025 CS 3354.R01
 
 A feature-rich Java chess application built with a Console engine and a Swing-based GUI. It supports both click-to-move and drag-and-drop, polished game-over dialogs, save/load, and a basic peer-to-peer multiplayer UI with chat.
 

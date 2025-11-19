@@ -22,7 +22,6 @@ import javax.swing.*;
  */
 public class MainMenuApp {
     public static void main(String[] args) {
-        // Use system look & feel if possible
         try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception ignored) {}
         SwingUtilities.invokeLater(MainMenuFrame::new);
     }
