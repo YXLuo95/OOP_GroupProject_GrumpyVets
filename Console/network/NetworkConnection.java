@@ -14,11 +14,11 @@ public class NetworkConnection {
     private ServerSocket serverSocket;
     private ObjectOutputStream out;
     private ObjectInputStream in;
-    private ExecutorService executor;
+    private final ExecutorService executor;
     private Consumer<NetworkMessage> messageHandler;
     private volatile boolean connected = false;
     private volatile boolean isHost = false;
-    private String connectionId;
+    private final String connectionId;
     
     public NetworkConnection() {
         this.executor = Executors.newCachedThreadPool();
@@ -121,6 +121,15 @@ public class NetworkConnection {
                 } catch (IOException | ClassNotFoundException e) {
                     if (connected) {
                         System.err.println("Message receive error: " + e.getMessage());
+                        // Notify local side about disconnect so UI can update immediately
+                        if (messageHandler != null) {
+                            try {
+                                messageHandler.accept(new NetworkMessage(NetworkMessage.Type.DISCONNECT,
+                                        "Connection lost", connectionId));
+                            } catch (Exception ignored) {
+                                // Best-effort notification
+                            }
+                        }
                         disconnect();
                     }
                     break;
@@ -194,33 +203,50 @@ public class NetworkConnection {
      * Disconnect
      */
     public void disconnect() {
-        connected = false;
-        
+        // Try to inform peer before tearing down streams; avoid recursion by writing directly
         try {
-            if (out != null) {
-                sendMessage(new NetworkMessage(NetworkMessage.Type.DISCONNECT, "Disconnecting", connectionId));
-                out.close();
-            }
-            if (in != null) in.close();
-            if (socket != null && !socket.isClosed()) socket.close();
-            if (serverSocket != null && !serverSocket.isClosed()) serverSocket.close();
-        } catch (IOException e) {
-            System.err.println("Error during disconnect: " + e.getMessage());
-        }
-        
-        if (executor != null && !executor.isShutdown()) {
-            executor.shutdown();
-            try {
-                if (!executor.awaitTermination(2, TimeUnit.SECONDS)) {
-                    executor.shutdownNow();
+            if (connected && out != null) {
+                try {
+                    // Send a brief chat/system notification so opponent sees a readable message
+                    NetworkMessage chatMsg = new NetworkMessage(NetworkMessage.Type.CHAT, "Opponent left the game", connectionId);
+                    out.writeObject(chatMsg);
+                    out.flush();
+                    System.out.println("Sent: CHAT (Opponent left the game) to peer");
+                } catch (IOException ignored) {
+                    // Ignore failures; proceed with disconnect
                 }
-            } catch (InterruptedException e) {
-                executor.shutdownNow();
-                Thread.currentThread().interrupt();
+                try {
+                    NetworkMessage msg = new NetworkMessage(NetworkMessage.Type.DISCONNECT, "Disconnecting", connectionId);
+                    out.writeObject(msg);
+                    out.flush();
+                    System.out.println("Sent: DISCONNECT to peer");
+                } catch (IOException ignored) {
+                    // Ignore send errors during teardown
+                }
             }
+        } finally {
+            connected = false;
+            try {
+                if (out != null) { out.close(); }
+                if (in != null) { in.close(); }
+                if (socket != null && !socket.isClosed()) { socket.close(); }
+                if (serverSocket != null && !serverSocket.isClosed()) { serverSocket.close(); }
+            } catch (IOException e) {
+                System.err.println("Error during disconnect: " + e.getMessage());
+            }
+            if (executor != null && !executor.isShutdown()) {
+                executor.shutdown();
+                try {
+                    if (!executor.awaitTermination(2, TimeUnit.SECONDS)) {
+                        executor.shutdownNow();
+                    }
+                } catch (InterruptedException e) {
+                    executor.shutdownNow();
+                    Thread.currentThread().interrupt();
+                }
+            }
+            System.out.println("Network connection closed.");
         }
-        
-        System.out.println("Network connection closed.");
     }
     
     // Getters

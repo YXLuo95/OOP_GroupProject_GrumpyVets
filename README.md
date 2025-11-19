@@ -175,12 +175,28 @@ java -cp ".:Console:." MainConsole
 - Save/load with persistent storage.
 - GUI main menu and single-player modes.
 - Multiplayer UI with chat and basic move synchronization.
+- Clean disconnect network behavior: sends a DISCONNECT packet plus a readable chat notice ("Opponent left the game").
+- AI hook class (`SingleplayerAI`) allowing pluggable opponents via the `AIOpponent` interface.
 
 🚧 Planned
 - Strengthen multiplayer: reconnection, resume, spectator, robustness.
 - AI improvements and difficulty options.
 - Notation display/export (PGN), statistics, analysis.
 - Better graphics/animations, sound effects, themes/skins.
+
+## Networking Notes
+Recent improvement: When a player disconnects intentionally, the system now first sends a chat message ("Opponent left the game") followed by a DISCONNECT packet before closing streams. On unexpected socket failure, a synthetic DISCONNECT is raised locally so the UI updates immediately. This reduces silent exits.
+
+If you are testing on the same machine, use `localhost`. For LAN play ensure the chosen port (default 8888) is open and not blocked by a firewall.
+
+## AI Integration
+The `SingleplayerAI` window exposes a minimal interface to plug in custom AI logic: implement `AIOpponent.chooseMove(Board board, PieceColor color)` returning `{startRow, startCol, endRow, endCol}` or `null` if no move. The class automatically triggers the AI when its color's turn begins, and safely refreshes UI afterward.
+
+To add your own AI:
+1. Create a class implementing `AIOpponent` (see `MinimaxAIOpponent.java` for reference).
+2. Instantiate and pass it with the desired `PieceColor` to `SingleplayerAI#setAIOpponent`.
+3. Optionally run in a background thread if computation is heavy (the default call is on the EDT).
+
 
 ## Known Limitations
 - Multiplayer is an early version: move sync and chat are available; reconnection, resume, and spectators are not yet implemented.
