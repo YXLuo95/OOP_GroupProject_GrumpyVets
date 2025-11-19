@@ -11,8 +11,13 @@ import objects.*;
 /**
  * Single Player Chess Game GUI (with AI hooks)
  *
- * This class preserves the original Singleplayer UI/behavior and adds an AI opponent
+ * This class preserves the original single-player UI/behavior and adds an AI opponent
  * interface so you can plug in an AI without changing this file again.
+ *
+ *   summary:
+ * - Provides hook points for an {@link AIOpponent} to make moves automatically.
+ * - Set the AI instance and its color; when it's its turn, it will be asked for a move.
+ * - Does not implement any AI logic here—only wiring, triggering, and UI integration.
  */
 public class SingleplayerAI extends JFrame {
 
@@ -22,9 +27,17 @@ public class SingleplayerAI extends JFrame {
      * Return null when no legal move is available.
      */
     private AIOpponent aiOpponent = null;
+    /**
+     * Color controlled by the AI (WHITE/BLACK); null means AI disabled.
+     */
     private PieceColor aiColor = null; // The side controlled by AI (WHITE/BLACK) or null when disabled
 
-    /** Configure AI opponent (pass null to disable). */
+    /**
+     * Configure or disable the AI opponent.
+     *
+     * @param opponent AI instance; pass null to disable
+     * @param color    Color the AI will play (ignored if opponent is null)
+     */
     public void setAIOpponent(AIOpponent opponent, PieceColor color) {
         this.aiOpponent = opponent;
         this.aiColor = opponent == null ? null : color;
@@ -32,22 +45,41 @@ public class SingleplayerAI extends JFrame {
     }
 
     // Core Game Components
+    /**
+     * Board view component: renders the board/pieces and handles user interaction.
+     */
     private BoardView chessBoard;
+    /**
+     * Game session encapsulating board state, move history, undo/redo logic.
+     */
     private GameSession gameSession;
+    /**
+     * Status label at bottom: current turn, check/checkmate/draw info.
+     */
     private JLabel statusLabel;
 
+    /**
+     * Constructor: initializes game and builds UI.
+     */
     public SingleplayerAI() {
         super("Chess - Single Player (AI Ready)");
         initializeGame();
         setupUI();
     }
 
+    /**
+     * Initialize game state: create board and session, then start.
+     */
     private void initializeGame() {
         Board board = new Board();
         gameSession = new GameSession(board);
         gameSession.start();
     }
 
+    /**
+     * Build and lay out Swing UI: toolbar, board panel, status bar.
+     * If AI plays white, attempts AI move immediately after setup.
+     */
     private void setupUI() {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
@@ -56,10 +88,11 @@ public class SingleplayerAI extends JFrame {
         add(toolbar, BorderLayout.NORTH);
 
         chessBoard = new BoardView(
-            () -> gameSession.getBoard(),
-            () -> gameSession.getCurrentTurn(),
-            () -> gameSession.isGameOver(),
-            (sr, sc, er, ec) -> gameSession.playMove(sr, sc, er, ec),
+            () -> gameSession.getBoard(),      // Supplier: current board
+            () -> gameSession.getCurrentTurn(), // Supplier: whose turn
+            () -> gameSession.isGameOver(),     // Supplier: game over state
+            (sr, sc, er, ec) -> gameSession.playMove(sr, sc, er, ec), // Executor: perform move
+            // Callback after a successful human move: update status, maybe trigger AI, repaint
             (sr, sc, er, ec) -> {
                 updateStatus();
                 // After human move, if AI should move next, trigger it
@@ -85,17 +118,22 @@ public class SingleplayerAI extends JFrame {
         maybeMakeAIMove();
     }
 
+    /**
+     * Create toolbar: back to menu / new game / undo / redo / save.
+     */
     private JToolBar createToolbar() {
         JToolBar toolbar = new JToolBar();
         toolbar.setFloatable(false);
 
         JButton backButton = new JButton("Back to Menu");
+        // Close current window (return to higher-level menu).
         backButton.addActionListener(e -> dispose());
         toolbar.add(backButton);
 
         toolbar.addSeparator();
 
         JButton newGameButton = new JButton("New Game");
+        // Start a fresh game: reset session, clear selection, refresh, trigger AI if needed.
         newGameButton.addActionListener(e -> {
             gameSession.start();
             chessBoard.resetSelection();
@@ -109,6 +147,7 @@ public class SingleplayerAI extends JFrame {
         toolbar.addSeparator();
 
         JButton undoButton = new JButton("Undo");
+        // Undo last move; if successful refresh UI.
         undoButton.addActionListener(e -> {
             if (gameSession.undo()) {
                 chessBoard.resetSelection();
@@ -119,6 +158,7 @@ public class SingleplayerAI extends JFrame {
         toolbar.add(undoButton);
 
         JButton redoButton = new JButton("Redo");
+        // Redo a move; if successful refresh UI.
         redoButton.addActionListener(e -> {
             if (gameSession.redo()) {
                 chessBoard.resetSelection();
@@ -131,12 +171,16 @@ public class SingleplayerAI extends JFrame {
         toolbar.addSeparator();
 
         JButton saveButton = new JButton("Save Game");
+        // Save current game to file (see saves/ directory).
         saveButton.addActionListener(e -> saveGame());
         toolbar.add(saveButton);
 
         return toolbar;
     }
 
+    /**
+     * Update status label; if game over, show result dialog.
+     */
     private void updateStatus() {
         statusLabel.setText(StatusText.forSession(gameSession));
         if (gameSession.isGameOver()) {
@@ -153,6 +197,12 @@ public class SingleplayerAI extends JFrame {
         }
     }
 
+    /**
+     * Show dialog with end-of-game result and options: new game / back to menu / exit.
+     *
+     * @param title   dialog title
+     * @param message result message
+     */
     private void showGameOverDialog(String title, String message) {
         SwingUtilities.invokeLater(() -> {
             Object[] options = {"New Game", "Back to Menu", "Exit"};
@@ -169,19 +219,25 @@ public class SingleplayerAI extends JFrame {
 
             switch (choice) {
                 case 0:
+                    // Start new game
                     startNewGame();
                     break;
                 case 1:
+                    // Back to main menu
                     backToMainMenu();
                     break;
                 case 2:
                 case JOptionPane.CLOSED_OPTION:
+                    // Exit application
                     System.exit(0);
                     break;
             }
         });
     }
 
+    /**
+     * Start a new session and trigger AI move if it plays first.
+     */
     private void startNewGame() {
         gameSession.start();
         chessBoard.resetSelection();
@@ -190,10 +246,17 @@ public class SingleplayerAI extends JFrame {
         maybeMakeAIMove();
     }
 
+    /**
+     * Dispose this window (return to parent UI).
+     */
     private void backToMainMenu() {
         dispose();
     }
 
+    /**
+     * Save current game: prompt for name; report success/failure.
+     * 
+     */
     private void saveGame() {
         String saveName = JOptionPane.showInputDialog(this,
             "Enter save name:",
@@ -218,6 +281,10 @@ public class SingleplayerAI extends JFrame {
     /**
      * If an AI is configured and it's AI's turn, query AI and make a move.
      * This runs on the EDT synchronously; for heavy AIs, move to a worker thread.
+     *
+     * @param aiOpponent the AI opponent instance
+     * @param aiColor    the color the AI plays as
+     * 
      */
     private void maybeMakeAIMove() {
         if (aiOpponent == null || aiColor == null) return;

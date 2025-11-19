@@ -6,6 +6,11 @@ import objects.PieceColor;
 
 /**
  * Helper to generate consistent status label text for any game state.
+ * Purpose: Centralizes status text logic for reuse across different GUI components
+ * Features:
+ * - Analyzes game session state to produce appropriate status messages
+ * - Handles turn indication, check, checkmate, stalemate, and game over scenarios
+ * - Static utility class for easy access without instantiation
  */
 public final class StatusText {
     private StatusText() {}
