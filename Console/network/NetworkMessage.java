@@ -3,7 +3,7 @@ package network;
 import java.io.Serializable;
 
 /**
- * 网络消息类 - 用于P2P通信
+ * network message class for P2P communication
  */
 public class NetworkMessage implements Serializable {
     private static final long serialVersionUID = 1L;
