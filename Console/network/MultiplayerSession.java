@@ -53,7 +53,7 @@ public class MultiplayerSession {
             isMyTurn = true; // White goes first
             myPlayerId = "HOST_" + System.currentTimeMillis();
             
-            // 等待连接建立
+            // wait for opponent to connect in a separate thread
             new Thread(() -> {
                 while (!network.isConnected() && network.isHost()) {
                     try {

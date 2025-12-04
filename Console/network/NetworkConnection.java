@@ -78,7 +78,7 @@ public class NetworkConnection {
             System.out.println("Connecting to " + hostAddress + ":" + port + "...");
             
             socket = new Socket();
-            socket.connect(new InetSocketAddress(hostAddress, port), 5000); // 5秒超时
+            socket.connect(new InetSocketAddress(hostAddress, port), 5000); // 5 seconds timeout
             
             System.out.println("Connected to host successfully!");
             
