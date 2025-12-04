@@ -3,7 +3,7 @@ package network;
 import java.io.Serializable;
 
 /**
- * 游戏移动数据类
+ * game move representation for a board game
  */
 public class GameMove implements Serializable {
     private static final long serialVersionUID = 1L;
